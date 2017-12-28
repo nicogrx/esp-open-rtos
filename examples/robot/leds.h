@@ -6,6 +6,7 @@
 #define BLUE	0x0000FF
 #define BLACK	0x000000
 #define WHITE	0xFFFFFF
+#define PINK	0xFF007F
 
 void leds_init(int nb_leds, uint8_t pin);
 void leds_turn_on(int);
