@@ -18,11 +18,16 @@
 		<div class="grid main">
 			<h1>WebSockets Demo</h1>
 			<div id="status_box" class="alert alert-info">Loading..</div>
-			<p>This page is similar to the home page but uses WebSockets for real-time updates.</p>
 			<div class="cover" align="center">
 				<canvas id="chartCanvas" width="512" height="100"></canvas>
-				<p/>
 				<p>LED Control</p>
+				<table id="led_color" height="100" width="200">
+				<tr>
+					<td>RED:<input type="number" name="red" value="255" min="0" max="255" width="40" height="40" id="led-red"></td>
+					<td>GREEN:<input type="number" name="green" value="255" min="0" max="255" width="40" height="40" id="led-green"></td>
+					<td>BLUE:<input type="number" name="blue" min="0" value="255" max="255" width="40" height="40" id="led-blue"></td>
+				</tr>
+				</table>
 				<div class="onoffswitch">
 					<input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="led-switch" onclick="gpio()">
 					<label class="onoffswitch-label" for="led-switch">
@@ -120,9 +125,13 @@
 					ws.send(data);
 			}
 			function gpio() {
-				if (document.getElementById('led-switch').checked)
-					wsWrite('E');
-				else
+				if (document.getElementById('led-switch').checked) {
+					var red = document.getElementById('led-red').value;
+					var green = document.getElementById('led-green').value;
+					var blue = document.getElementById('led-blue').value;
+					var rgb_color = red << 16 | green << 8 | blue;
+					wsWrite('E' + rgb_color.toString());
+				} else
 					wsWrite('D');
 			}
 		</script>
