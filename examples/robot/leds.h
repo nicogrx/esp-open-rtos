@@ -8,7 +8,7 @@
 #define WHITE	0xFFFFFF
 
 void leds_init(int nb_leds, uint8_t pin);
-void leds_turn_on(void);
+void leds_turn_on(int);
 void leds_turn_off(void);
 void leds_scroll(void);
 #endif

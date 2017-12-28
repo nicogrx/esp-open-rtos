@@ -18,6 +18,8 @@ static bool init_done = false;
 static bool leds_task_end = false;
 static QueueHandle_t leds_queue;
 
+static color_on = WHITE;
+
 static void leds_set_all(uint32_t c)
 {
 	if (!init_done)
@@ -70,8 +72,9 @@ static void leds_scroll_timed(uint32_t c1, uint32_t c2, int time)
 	}
 }
 
-void leds_turn_on(void)
+void leds_turn_on(int color)
 {
+	color_on = (uint32_t)color;
 	int ev;	
 	if (!init_done)
 		return;
@@ -106,7 +109,7 @@ static void leds_task(void *pvParameters) {
 		printf("%s: ev:%i\n", __func__, ev);
 		switch(ev) {
 		case LEDS_ON:
-			leds_set_all(WHITE);
+			leds_set_all(color_on);
 			break;
 		case LEDS_OFF:
 			leds_set_all(BLACK);
