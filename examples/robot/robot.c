@@ -22,7 +22,7 @@ void user_init(void)
 	uart_set_baud(0, 115200);
 
 	http_server_init();
-	leds_init(12, 2);
+	leds_init(24, 2);
 }
 
 
