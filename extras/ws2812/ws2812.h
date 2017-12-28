@@ -122,12 +122,68 @@ void ws2812_off(uint8_t gpio_num);
 
 // 400 ns
 #ifndef WS2812_SHORT_DELAY
-#define WS2812_SHORT_DELAY() for (volatile uint32_t __j = 1; __j > 0; __j--)
+//#define WS2812_SHORT_DELAY() for (volatile uint32_t __j = 1; __j > 0; __j--)
+#define WS2812_SHORT_DELAY() \
+{ \
+	asm volatile ("nop"); \
+	asm volatile ("nop"); \
+	asm volatile ("nop"); \
+	asm volatile ("nop"); \
+	asm volatile ("nop"); \
+	asm volatile ("nop"); \
+	asm volatile ("nop"); \
+	asm volatile ("nop"); \
+	asm volatile ("nop"); \
+	asm volatile ("nop"); \
+	asm volatile ("nop"); \
+	asm volatile ("nop"); \
+	asm volatile ("nop"); \
+	asm volatile ("nop"); \
+	asm volatile ("nop"); \
+	asm volatile ("nop"); \
+}
 #endif
 
 // 800 ns
 #ifndef WS2812_LONG_DELAY
-#define WS2812_LONG_DELAY()  for (volatile uint32_t __j = 3; __j > 0; __j--)
+//#define WS2812_LONG_DELAY()  for (volatile uint32_t __j = 3; __j > 0; __j--)
+
+#define WS2812_LONG_DELAY() \
+{ \
+	asm volatile ("nop"); \
+	asm volatile ("nop"); \
+	asm volatile ("nop"); \
+	asm volatile ("nop"); \
+	asm volatile ("nop"); \
+	asm volatile ("nop"); \
+	asm volatile ("nop"); \
+	asm volatile ("nop"); \
+	asm volatile ("nop"); \
+	asm volatile ("nop"); \
+	asm volatile ("nop"); \
+	asm volatile ("nop"); \
+	asm volatile ("nop"); \
+	asm volatile ("nop"); \
+	asm volatile ("nop"); \
+	asm volatile ("nop"); \
+	asm volatile ("nop"); \
+	asm volatile ("nop"); \
+	asm volatile ("nop"); \
+	asm volatile ("nop"); \
+	asm volatile ("nop"); \
+	asm volatile ("nop"); \
+	asm volatile ("nop"); \
+	asm volatile ("nop"); \
+	asm volatile ("nop"); \
+	asm volatile ("nop"); \
+	asm volatile ("nop"); \
+	asm volatile ("nop"); \
+	asm volatile ("nop"); \
+	asm volatile ("nop"); \
+	asm volatile ("nop"); \
+	asm volatile ("nop"); \
+	asm volatile ("nop"); \
+}
 #endif
 
 
