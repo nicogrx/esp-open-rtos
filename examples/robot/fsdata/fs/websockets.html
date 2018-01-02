@@ -21,11 +21,18 @@
 			<div class="cover" align="center">
 				<canvas id="chartCanvas" width="512" height="100"></canvas>
 				<p>LED Control</p>
-				<table id="led_color" height="100" width="200">
+				<table class="table table-striped" id="led_color" height="50" width="200">
 				<tr>
 					<td>RED:<input type="number" name="red" value="255" min="0" max="255" width="40" height="40" id="led-red"></td>
 					<td>GREEN:<input type="number" name="green" value="255" min="0" max="255" width="40" height="40" id="led-green"></td>
 					<td>BLUE:<input type="number" name="blue" min="0" value="255" max="255" width="40" height="40" id="led-blue"></td>
+				</tr>
+				</table>
+				<table class="table table-striped" id="led_mode" height="50" width="200">
+				<tr>
+					<td>Light:<input type="radio" name="led-mode" value="light" checked="yes"/></td>
+					<td>Scroll:<input type="radio" name="led-mode" value="scroll"/></td>
+					<td>Blink:<input type="radio" name="led-mode" value="blink"/></td>
 				</tr>
 				</table>
 				<div class="onoffswitch">
@@ -124,13 +131,27 @@
 				else if (ws.readyState == 1)
 					ws.send(data);
 			}
+			function getRadioVal(radios) {
+				var val;
+				for (var i=0, len=radios.length; i<len; i++) {
+			        if ( radios[i].checked ) {
+			            val = radios[i].value;
+			            break;
+			        }
+			    }
+			    return val;
+			}
 			function gpio() {
+				var red = document.getElementById('led-red').value;
+				var green = document.getElementById('led-green').value;
+				var blue = document.getElementById('led-blue').value;
+				var rgb_color = red << 16 | green << 8 | blue;
 				if (document.getElementById('led-switch').checked) {
-					var red = document.getElementById('led-red').value;
-					var green = document.getElementById('led-green').value;
-					var blue = document.getElementById('led-blue').value;
-					var rgb_color = red << 16 | green << 8 | blue;
-					wsWrite('E' + rgb_color.toString());
+					rval = getRadioVal(document.getElementsByName("led-mode"));
+					if (rval == "scroll")
+						wsWrite('S' + rgb_color.toString());
+					else
+						wsWrite('E' + rgb_color.toString());
 				} else
 					wsWrite('D');
 			}
