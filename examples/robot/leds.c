@@ -63,10 +63,12 @@ static void leds_scroll_timed(uint32_t c1, uint32_t c2, int time)
 		p = PATTERN;
 		for (int i = 0; i < number_of_leds - 1; i++) {
 			leds_set_all_with_pattern(c1, c2, p);
+			delay_ms(100);
 			p = p << 1;
 		}
 		for (int i = 0; i < number_of_leds; i++) {
 			leds_set_all_with_pattern(c1, c2, p);
+			delay_ms(100);
 			p = p >> 1;
 		}
 	}
