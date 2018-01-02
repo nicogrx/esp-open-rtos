@@ -30,7 +30,7 @@ static void pir_timer_cb(TimerHandle_t xTimer)
 static void robot_task(void *pvParameters) {
 	int pir_ev;
 
-	on_pir_timer = xTimerCreate("on pir timer", 1000/portTICK_PERIOD_MS,
+	on_pir_timer = xTimerCreate("on pir timer", 10000/portTICK_PERIOD_MS,
 								pdFALSE, NULL, pir_timer_cb);
     if (on_pir_timer == NULL)
 		goto end;
@@ -41,7 +41,8 @@ static void robot_task(void *pvParameters) {
 			if (xTimerStart(on_pir_timer, 0) != pdPASS) {
 				printf("%s: failed to start timer\n", __func__);
 			} else {
-				leds_turn_on(BLUE);
+				//leds_turn_on(BLUE);
+				leds_dimm();
 			}
 		}
 		taskYIELD();

@@ -10,6 +10,7 @@ enum {
 	LEDS_ON,
 	LEDS_OFF,
 	LEDS_SCROLL,
+	LEDS_DIMM,
 };
 
 static int number_of_leds = 12;
@@ -52,7 +53,7 @@ static void leds_set_all_with_pattern(uint32_t c1, uint32_t c2, uint32_t p)
  * a couple of time
  * @time: time to scroll in ms.
  */
-static void leds_scroll_timed(uint32_t c1, uint32_t c2, int time)
+static void leds_do_scroll(uint32_t c1, uint32_t c2, int time)
 {
 	int timeout_ticks = xTaskGetTickCount() + (time / portTICK_PERIOD_MS);
 	static uint32_t p;
@@ -70,6 +71,31 @@ static void leds_scroll_timed(uint32_t c1, uint32_t c2, int time)
 			leds_set_all_with_pattern(c1, c2, p);
 			delay_ms(100);
 			p = p >> 1;
+		}
+	}
+}
+
+static void leds_do_dimm(void)
+{
+	uint32_t c;
+	uint32_t r_msk = 0, g_msk = 0, b_msk = 0, msk = 0;
+
+	if (color_on & 0xFF0000)
+		r_msk = 0xFF0000;
+	if (color_on & 0xFF00)
+		g_msk = 0xFF00;
+	if (color_on & 0xFF)
+		b_msk = 0xFF;
+	msk = r_msk | g_msk | b_msk;
+
+	for (int i = 0; i < 3; i++) {
+		for (c = 0; c < 100; c += 2) {
+			leds_set_all(((c << 16) | (c << 8) | c) & msk);
+			delay_ms(10);
+		}
+		for (c = 100; c > 0; c -= 2) {
+			leds_set_all(((c << 16) | (c << 8) | c) & msk);
+			delay_ms(10);
 		}
 	}
 }
@@ -103,6 +129,13 @@ void leds_scroll(uint32_t color)
 	xQueueSend(leds_queue, &ev, 0);
 }
 
+void leds_dimm(void)
+{
+	int ev;	
+	ev = LEDS_DIMM;
+	xQueueSend(leds_queue, &ev, 0);	
+}
+
 static void leds_task(void *pvParameters) {
     QueueHandle_t queue = (QueueHandle_t)pvParameters;
 	int ev;
@@ -118,7 +151,10 @@ static void leds_task(void *pvParameters) {
 			leds_set_all(BLACK);
 			break;
 		case LEDS_SCROLL:
-			leds_scroll_timed(color_on, BLACK, 5000);
+			leds_do_scroll(color_on, BLACK, 5000);
+			break;
+		case LEDS_DIMM:
+			leds_do_dimm();
 			break;
 		default:
 			printf("unkown leds ev: %i\n", ev);
