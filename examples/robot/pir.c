@@ -29,12 +29,11 @@ static void pir_task(void *pvParameters) {
 	vTaskDelete(NULL);
 }
 
-int pir_wait_for_event(void)
+bool pir_wait_for_event(int *ev)
 {
-	int ev;
-	xQueueReceive(pir_queue, &ev, portMAX_DELAY);
-	printf("%s: ev at %i\n", __func__, ev);
-	return ev;
+	if (xQueueReceive(pir_queue, ev, 0) == pdFALSE)
+		return false;
+	return true;
 }
 
 int pir_init(uint8_t pin)

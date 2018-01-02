@@ -21,11 +21,16 @@
 static bool robot_task_end = false;
 
 static void robot_task(void *pvParameters) {
+	int pir_ev;
 	while(!robot_task_end) {
-		pir_wait_for_event();
-		leds_turn_on(BLUE);
-		delay_ms(1000);
-		leds_turn_off();
+		if(pir_wait_for_event(&pir_ev))
+		{
+			printf("%s: ev at %i\n", __func__, pir_ev);
+			leds_turn_on(BLUE);
+			delay_ms(1000);
+			leds_turn_off();
+		}
+		taskYIELD();
 	}
 	vTaskDelete(NULL);
 }
