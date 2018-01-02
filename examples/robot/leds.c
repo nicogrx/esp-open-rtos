@@ -18,7 +18,7 @@ static bool init_done = false;
 static bool leds_task_end = false;
 static QueueHandle_t leds_queue;
 
-static color_on = WHITE;
+static uint32_t color_on = WHITE;
 
 static void leds_set_all(uint32_t c)
 {
@@ -72,10 +72,10 @@ static void leds_scroll_timed(uint32_t c1, uint32_t c2, int time)
 	}
 }
 
-void leds_turn_on(int color)
+void leds_turn_on(uint32_t color)
 {
-	color_on = (uint32_t)color;
 	int ev;	
+	color_on = color;
 	if (!init_done)
 		return;
 	ev = LEDS_ON;
@@ -91,9 +91,10 @@ void leds_turn_off(void)
 	xQueueSend(leds_queue, &ev, 0);
 }
 
-void leds_scroll(void)
+void leds_scroll(uint32_t color)
 {
-	int ev;	
+	int ev;
+	color_on = color;
 	if (!init_done)
 		return;
 	ev = LEDS_SCROLL;
@@ -115,7 +116,7 @@ static void leds_task(void *pvParameters) {
 			leds_set_all(BLACK);
 			break;
 		case LEDS_SCROLL:
-			leds_scroll_timed(GREEN, BLACK, 5000);	
+			leds_scroll_timed(color_on, BLACK, 5000);
 			break;
 		default:
 			printf("unkown leds ev: %i\n", ev);

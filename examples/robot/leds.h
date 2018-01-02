@@ -9,7 +9,7 @@
 #define PINK	0xFF007F
 
 void leds_init(int nb_leds, uint8_t pin);
-void leds_turn_on(int);
+void leds_turn_on(uint32_t);
 void leds_turn_off(void);
-void leds_scroll(void);
+void leds_scroll(uint32_t);
 #endif
