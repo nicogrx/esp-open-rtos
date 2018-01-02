@@ -101,11 +101,11 @@ void leds_scroll(void)
 }
 
 static void leds_task(void *pvParameters) {
-    QueueHandle_t *queue = (QueueHandle_t *)pvParameters;
+    QueueHandle_t queue = (QueueHandle_t)pvParameters;
 	int ev;
 
 	while(!leds_task_end) {
-        xQueueReceive(*queue, &ev, portMAX_DELAY);
+        xQueueReceive(queue, &ev, portMAX_DELAY);
 		printf("%s: ev:%i\n", __func__, ev);
 		switch(ev) {
 		case LEDS_ON:
@@ -133,7 +133,7 @@ void leds_init(int nb_leds, uint8_t pin)
 	gpio_enable(led_pin, GPIO_OUTPUT);
 	gpio_write(led_pin, 0);
     leds_queue = xQueueCreate(10, sizeof(int));
-    xTaskCreate(&leds_task, "Test leds", 256, &leds_queue, 2, NULL);
+    xTaskCreate(&leds_task, "leds mngt", 256, leds_queue, 2, NULL);
 	init_done = true;
 	leds_turn_off();
 }
