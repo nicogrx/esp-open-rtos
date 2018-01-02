@@ -127,7 +127,11 @@ static void websocket_cb(struct tcp_pcb *pcb, uint8_t *data, u16_t data_len, uin
             val = 0xDEAD;
             break;
         case 'E': // Enable LED
-			leds_turn_on(atoi(&data[1]));
+			leds_turn_on((uint32_t)atoi(&data[1]));
+            val = 0xBEEF;
+            break;
+        case 'S': // Scroll LED
+			leds_scroll((uint32_t)atoi(&data[1]));
             val = 0xBEEF;
             break;
         default:
