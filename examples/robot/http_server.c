@@ -12,8 +12,8 @@
 #include <task.h>
 #include <ssid_config.h>
 #include <httpd/httpd.h>
-
-#include "leds.h"
+#include "queue.h"
+#include "http_server.h"
 
 #define LED_PIN 2
 
@@ -22,6 +22,8 @@ enum {
     SSI_FREE_HEAP,
     SSI_LED_STATE
 };
+
+static QueueHandle_t wbs_queue;
 
 static int32_t ssi_handler(int32_t iIndex, char *pcInsert, int32_t iInsertLen)
 {
@@ -116,6 +118,7 @@ static void websocket_cb(struct tcp_pcb *pcb, uint8_t *data, u16_t data_len, uin
 
     uint8_t response[2];
     uint16_t val;
+	int ev[2];
 
     switch (data[0]) {
         case 'A': // ADC
@@ -123,17 +126,29 @@ static void websocket_cb(struct tcp_pcb *pcb, uint8_t *data, u16_t data_len, uin
             val = sdk_system_adc_read();
             break;
         case 'D': // Disable LED
-			leds_turn_off();	
+			ev[0] = WBS_LEDS_OFF;
+			xQueueSend(wbs_queue, ev, 0);
             val = 0xDEAD;
             break;
         case 'E': // Enable LED
-			leds_turn_on((uint32_t)atoi(&data[1]));
+			ev[0] = WBS_LEDS_ON;
+			ev[1] = atoi((char *)&data[1]);
+			xQueueSend(wbs_queue, ev, 0);
             val = 0xBEEF;
             break;
         case 'S': // Scroll LED
-			leds_scroll((uint32_t)atoi(&data[1]));
+			ev[0] = WBS_LEDS_SCROLL;
+			ev[1] = atoi((char *)&data[1]);
+			xQueueSend(wbs_queue, ev, 0);
             val = 0xBEEF;
             break;
+		case 'M': // Dimml LED
+			ev[0] = WBS_LEDS_DIMM;
+			ev[1] = atoi((char *)&data[1]);
+			xQueueSend(wbs_queue, ev, 0);
+            val = 0xBEEF;
+            break;
+
         default:
             printf("Unknown command\n");
             val = 0;
@@ -159,6 +174,13 @@ static void websocket_open_cb(struct tcp_pcb *pcb, const char *uri)
     }
 }
 
+bool websocket_wait_for_event(int *ev)
+{
+	if (xQueueReceive(wbs_queue, ev, 0) == pdFALSE)
+		return false;
+	return true;
+}
+
 static void httpd_task(void *pvParameters)
 {
     tCGI pCGIs[] = {
@@ -181,15 +203,20 @@ static void httpd_task(void *pvParameters)
             (tWsHandler) websocket_cb);
     httpd_init();
 
-    for (;;);
+    for (;;)
+		taskYIELD();
 }
 
-void http_server_init(void)
+int http_server_init(void)
 {
     struct sdk_station_config config = {
         .ssid = WIFI_SSID,
         .password = WIFI_PASS,
     };
+
+	wbs_queue = xQueueCreate(10, sizeof(int) * 2);
+	if (!wbs_queue)
+		return -1;
 
     /* required to call wifi_set_opmode before station_set_config */
     sdk_wifi_set_opmode(STATION_MODE);
@@ -198,4 +225,5 @@ void http_server_init(void)
 
     /* initialize tasks */
     xTaskCreate(&httpd_task, "HTTP Daemon", 128, NULL, 2, NULL);
+	return 0;
 }
