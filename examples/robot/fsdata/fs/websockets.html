@@ -32,7 +32,7 @@
 				<tr>
 					<td>Light:<input type="radio" name="led-mode" value="light" checked="yes"/></td>
 					<td>Scroll:<input type="radio" name="led-mode" value="scroll"/></td>
-					<td>Blink:<input type="radio" name="led-mode" value="blink"/></td>
+					<td>Dimm:<input type="radio" name="led-mode" value="dimm"/></td>
 				</tr>
 				</table>
 				<div class="onoffswitch">
@@ -150,6 +150,8 @@
 					rval = getRadioVal(document.getElementsByName("led-mode"));
 					if (rval == "scroll")
 						wsWrite('S' + rgb_color.toString());
+					else if (rval == "dimm")
+						wsWrite('M' + rgb_color.toString());
 					else
 						wsWrite('E' + rgb_color.toString());
 				} else
