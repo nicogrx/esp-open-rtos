@@ -22,7 +22,7 @@ static void pir_task(void *pvParameters) {
 
 	while (!pir_end) {
         xSemaphoreTake(pir_sem, portMAX_DELAY);
-		printf("%s: presence detected!\n", __func__);
+		//printf("%s: presence detected!\n", __func__);
 		ticks = xTaskGetTickCount();
 		xQueueSend(queue, &ticks, 0);
 	};

@@ -143,7 +143,7 @@ static void leds_task(void *pvParameters) {
 
 	while(!leds_task_end) {
         xQueueReceive(queue, &ev, portMAX_DELAY);
-		printf("%s: ev:%i\n", __func__, ev);
+		//printf("%s: ev:%i\n", __func__, ev);
 		switch(ev) {
 		case LEDS_ON:
 			leds_on = true;
