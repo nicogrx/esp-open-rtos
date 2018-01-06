@@ -6,7 +6,7 @@
 		<link rel="stylesheet" type="text/css" href="css/siimple.min.css">
 		<link rel="stylesheet" type="text/css" href="css/style.css">
 		<link rel="shortcut icon" href="img/favicon.png">
-		<title>HTTP Server</title>
+		<title>My little robot!</title>
 	</head>
 	<body>
 		<ul class="navbar">
@@ -16,10 +16,9 @@
 		</ul>
 
 		<div class="grid main">
-			<h1>WebSockets Demo</h1>
+			<h1>My little robot!</h1>
 			<div id="status_box" class="alert alert-info">Loading..</div>
 			<div class="cover" align="center">
-				<canvas id="chartCanvas" width="512" height="100"></canvas>
 				<p>LED Control</p>
 				<table class="table table-striped" id="led_color" height="50" width="200">
 				<tr>
@@ -44,7 +43,7 @@
 				</div>
 			</div>
 
-			<h1>Server Status</h1>
+			<h1>Status</h2>
 			<table class="table table-striped">
 				<tr>
 					<td><b>Uptime:</b></td>
@@ -57,6 +56,10 @@
 				<tr>
 					<td><b>LED state:</b></td>
 					<td id="led"></td>
+				</tr>
+				<tr>
+					<td><b>Distance from obstacle:</b></td>
+					<td id="us_distance"></td>
 				</tr>
 			</table>
 
@@ -74,20 +77,12 @@
 			var series = new TimeSeries();
 			window.onload = function() {
 				wsOpen();
-				startPolling();
 			}
 			function setMsg(cls, text) {
 				sbox = document.getElementById('status_box');
 				sbox.className = "alert alert-" + cls;
 				sbox.innerHTML = text;
 				console.log(text);
-			}
-			function startPolling() {
-				var chart = new SmoothieChart({millisPerPixel:11,grid:{fillStyle:'#ffffff',strokeStyle:'#ffffff',borderVisible:false},
-					labels:{fillStyle:'#000000'},maxValue:1024,minValue:0});
-				chart.addTimeSeries(series, {lineWidth:2,strokeStyle:'#03a9f4',fillStyle:'#f1f5fa'});
-				chart.streamTo(document.getElementById("chartCanvas"), 500);
-				setInterval(function() { wsWrite('A'); }, 500);
 			}
 			function onMessage(evt) {
 				retries = 0;
@@ -123,6 +118,7 @@
 					document.getElementById('uptime').innerHTML = stats.uptime + ' seconds';
 					document.getElementById('heap').innerHTML = stats.heap + ' bytes';
 					document.getElementById('led').innerHTML = (stats.led == 1) ? 'On' : 'Off';
+					document.getElementById('us_distance').innerHTML = stats.us_distance + ' cm';
 				};
 			}
 			function wsWrite(data) {

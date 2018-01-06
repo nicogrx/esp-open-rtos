@@ -14,6 +14,7 @@
 #include <httpd/httpd.h>
 #include "queue.h"
 #include "http_server.h"
+#include "robot.h"
 
 #define LED_PIN 2
 
@@ -83,20 +84,22 @@ static void websocket_task(void *pvParameter)
 
     for (;;) {
         if (pcb == NULL || pcb->state != ESTABLISHED) {
-            printf("Connection closed, deleting task\n");
+            //printf("Connection closed, deleting task\n");
             break;
         }
 
         int uptime = xTaskGetTickCount() * portTICK_PERIOD_MS / 1000;
         int heap = (int) xPortGetFreeHeapSize();
-        int led = !gpio_read(LED_PIN);
+        int led = (int)robot_get_leds_status();
+        int us_distance = (int)robot_get_us_distance();
 
         /* Generate response in JSON format */
-        char response[64];
+        char response[96];
         int len = snprintf(response, sizeof (response),
                 "{\"uptime\" : \"%d\","
                 " \"heap\" : \"%d\","
-                " \"led\" : \"%d\"}", uptime, heap, led);
+                " \"led\" : \"%d\","
+				" \"us_distance\" : \"%d\"}", uptime, heap, led, us_distance);
         if (len < sizeof (response))
             websocket_write(pcb, (unsigned char *) response, len, WS_TEXT_MODE);
 
@@ -114,17 +117,11 @@ static void websocket_task(void *pvParameter)
  */
 static void websocket_cb(struct tcp_pcb *pcb, uint8_t *data, u16_t data_len, uint8_t mode)
 {
-    //printf("[websocket_callback]:\n%.*s\n", (int) data_len, (char*) data);
-
     uint8_t response[2];
     uint16_t val;
 	int ev[2];
 
     switch (data[0]) {
-        case 'A': // ADC
-            /* This should be done on a separate thread in 'real' applications */
-            val = sdk_system_adc_read();
-            break;
         case 'D': // Disable LED
 			ev[0] = WBS_LEDS_OFF;
 			xQueueSend(wbs_queue, ev, 0);
@@ -150,7 +147,7 @@ static void websocket_cb(struct tcp_pcb *pcb, uint8_t *data, u16_t data_len, uin
             break;
 
         default:
-            printf("Unknown command\n");
+            printf("%s: unknown command: %c\n", __func__, data[0]);
             val = 0;
             break;
     }
