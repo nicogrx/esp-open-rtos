@@ -29,7 +29,8 @@
 
 #define US_MAX_DISTANCE_CM 500 // 5m max
 
-static bool robot_task_end = false;
+static bool robot_main_task_end = false;
+static bool robot_motorctrl_task_end = false;
 static int32_t us_distance;
 
 static int32_t get_distance_from_obstacle(ultrasonic_sensor_t *sensor)
@@ -60,30 +61,37 @@ static int32_t get_distance_from_obstacle(ultrasonic_sensor_t *sensor)
 	return us_distance;
 }
 
-static void robot_task(void *pvParameters) {
-	int pir_ev;
-	int wbs_ev[2];
+static void robot_motorctrl_task(void *pvParameters) {
 	ultrasonic_sensor_t us = {
         .trigger_pin = US_TRIGGER_PIN,
         .echo_pin = US_ECHO_PIN
     };
+    ultrasoinc_init(&us);
+
+	while(!robot_motorctrl_task_end) {
+		get_distance_from_obstacle(&us);
+		if (us_distance < 20)
+				printf ("%s: TODO: stop if moving forward\n", __func__);
+		vTaskDelay(10);
+	}
+}
+
+static void robot_main_task(void *pvParameters) {
+	int pir_ev;
+	int wbs_ev[2];
 
 	uart_set_baud(0, 115200);
 	leds_init(24, LEDS_PIN);
 	pir_init(PIR_PIN);
-    ultrasoinc_init(&us);
+
+	xTaskCreate(&robot_motorctrl_task, "robot motor mngt", 256, NULL, 3, NULL);
 
 	if (http_server_init()) {
 		printf ("%s: failed to init httpd\n", __func__);
 		goto end;
 	}
 
-	while(!robot_task_end) {
-
-		get_distance_from_obstacle(&us);
-		if (us_distance < 20)
-				printf ("%s: TODO: stop if moving forward\n", __func__);
-
+	while(!robot_main_task_end) {
 		if (websocket_wait_for_event(wbs_ev)) {
 			switch(wbs_ev[0]) {
 			case WBS_LEDS_ON:
@@ -108,7 +116,7 @@ static void robot_task(void *pvParameters) {
 			if (!leds_is_on())
 				leds_dimm();
 		}
-		vTaskDelay(1);
+		vTaskDelay(10);
 	}
 end:
 	vTaskDelete(NULL);
@@ -126,7 +134,7 @@ int32_t robot_get_us_distance(void)
 
 void user_init(void)
 {
-	xTaskCreate(&robot_task, "robot mngt", 256, NULL, 2, NULL);
+	xTaskCreate(&robot_main_task, "robot mngt", 256, NULL, 2, NULL);
 }
 
 
