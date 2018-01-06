@@ -44,7 +44,9 @@ static void us_timer_cb(TimerHandle_t xTimer)
 
 static int32_t get_distance_from_obstacle(ultrasonic_sensor_t *sensor)
 {
+	taskENTER_CRITICAL();
 	us_distance = ultrasoinc_measure_cm(sensor, US_MAX_DISTANCE_CM);
+	taskEXIT_CRITICAL();
 
     if (us_distance < 0) {
 		printf("Error: ");
