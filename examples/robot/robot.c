@@ -140,7 +140,7 @@ static void robot_task(void *pvParameters) {
 				leds_dimm();
 			}
 		}
-		taskYIELD();
+		vTaskDelay(1);
 	}
 end:
 	vTaskDelete(NULL);
