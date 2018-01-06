@@ -103,7 +103,7 @@ static void websocket_task(void *pvParameter)
         if (len < sizeof (response))
             websocket_write(pcb, (unsigned char *) response, len, WS_TEXT_MODE);
 
-        vTaskDelay(2000 / portTICK_PERIOD_MS);
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
 
     vTaskDelete(NULL);
