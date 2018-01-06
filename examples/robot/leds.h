@@ -13,4 +13,5 @@ void leds_turn_on(uint32_t);
 void leds_turn_off(void);
 void leds_scroll(uint32_t);
 void leds_dimm(void);
+bool leds_is_on(void);
 #endif

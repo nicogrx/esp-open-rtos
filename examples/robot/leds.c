@@ -18,6 +18,7 @@ static uint8_t led_pin = 2;
 static bool init_done = false;
 static bool leds_task_end = false;
 static QueueHandle_t leds_queue;
+static bool leds_on = false;
 
 static uint32_t color_on = WHITE;
 
@@ -145,15 +146,20 @@ static void leds_task(void *pvParameters) {
 		printf("%s: ev:%i\n", __func__, ev);
 		switch(ev) {
 		case LEDS_ON:
+			leds_on = true;
 			leds_set_all(color_on);
 			break;
 		case LEDS_OFF:
+			leds_on = false;
 			leds_set_all(BLACK);
 			break;
 		case LEDS_SCROLL:
+			leds_on = true;
 			leds_do_scroll(color_on, BLACK, 5000);
+			leds_on = false;
 			break;
 		case LEDS_DIMM:
+			leds_on = true;
 			leds_do_dimm();
 			break;
 		default:
@@ -161,6 +167,11 @@ static void leds_task(void *pvParameters) {
 		}
 	}
 	vTaskDelete(NULL);
+}
+
+bool leds_is_on(void)
+{
+	return leds_on;
 }
 
 void leds_init(int nb_leds, uint8_t pin)
