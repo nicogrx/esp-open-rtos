@@ -161,6 +161,8 @@ static void leds_task(void *pvParameters) {
 		case LEDS_DIMM:
 			leds_on = true;
 			leds_do_dimm();
+			leds_set_all(BLACK);
+			leds_on = false;
 			break;
 		default:
 			printf("unkown leds ev: %i\n", ev);

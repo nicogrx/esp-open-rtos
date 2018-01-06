@@ -30,17 +30,7 @@
 #define US_MAX_DISTANCE_CM 500 // 5m max
 
 static bool robot_task_end = false;
-static SemaphoreHandle_t us_sem;
 static int32_t us_distance;
-static void pir_timer_cb(TimerHandle_t xTimer)
-{
-	leds_turn_off();
-}
-
-static void us_timer_cb(TimerHandle_t xTimer)
-{
-	xSemaphoreGive(us_sem);
-}
 
 static int32_t get_distance_from_obstacle(ultrasonic_sensor_t *sensor)
 {
@@ -73,12 +63,14 @@ static int32_t get_distance_from_obstacle(ultrasonic_sensor_t *sensor)
 static void robot_task(void *pvParameters) {
 	int pir_ev;
 	int wbs_ev[2];
-	TimerHandle_t on_pir_timer, us_timer;
 	ultrasonic_sensor_t us = {
         .trigger_pin = US_TRIGGER_PIN,
         .echo_pin = US_ECHO_PIN
     };
 
+	uart_set_baud(0, 115200);
+	leds_init(24, LEDS_PIN);
+	pir_init(PIR_PIN);
     ultrasoinc_init(&us);
 
 	if (http_server_init()) {
@@ -86,32 +78,11 @@ static void robot_task(void *pvParameters) {
 		goto end;
 	}
 
-	on_pir_timer = xTimerCreate("on pir timer", 10000/portTICK_PERIOD_MS,
-								pdFALSE, NULL, pir_timer_cb);
-    if (on_pir_timer == NULL)
-		goto end;
-
-	us_timer = xTimerCreate("ultrasonic timer", 20/portTICK_PERIOD_MS,
-								pdTRUE, NULL, us_timer_cb);
-    if (us_timer == NULL)
-		goto end;
-
-	us_sem = xSemaphoreCreateBinary();
-	if (!us_sem)
-		goto end;
-
-	if (xTimerStart(us_timer, 0) != pdPASS) {
-		printf("%s: failed to start timer\n", __func__);
-		goto end;
-	}
-
 	while(!robot_task_end) {
 
-        if (xSemaphoreTake(us_sem, 0) == pdTRUE) {
-			get_distance_from_obstacle(&us);
-			/*if (us_distance) < 20)
-				printf ("%s: TODO: stop if moving forward\n", __func__);*/
-		}
+		get_distance_from_obstacle(&us);
+		if (us_distance < 20)
+				printf ("%s: TODO: stop if moving forward\n", __func__);
 
 		if (websocket_wait_for_event(wbs_ev)) {
 			switch(wbs_ev[0]) {
@@ -134,11 +105,8 @@ static void robot_task(void *pvParameters) {
 
 		if(pir_wait_for_event(&pir_ev)) {
 			printf("%s: pir event at %i\n", __func__, pir_ev);
-			if (xTimerStart(on_pir_timer, 0) != pdPASS) {
-				printf("%s: failed to start timer\n", __func__);
-			} else if (!leds_is_on()) {
+			if (!leds_is_on())
 				leds_dimm();
-			}
 		}
 		vTaskDelay(1);
 	}
@@ -158,9 +126,6 @@ int32_t robot_get_us_distance(void)
 
 void user_init(void)
 {
-	uart_set_baud(0, 115200);
-	leds_init(24, LEDS_PIN);
-	pir_init(PIR_PIN);
 	xTaskCreate(&robot_task, "robot mngt", 256, NULL, 2, NULL);
 }
 
