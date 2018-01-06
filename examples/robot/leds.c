@@ -20,7 +20,7 @@ static bool leds_task_end = false;
 static QueueHandle_t leds_queue;
 static bool leds_on = false;
 
-static uint32_t color_on = WHITE;
+static uint32_t color_on = LIGHTWHITE;
 
 static void leds_set_all(uint32_t c)
 {
