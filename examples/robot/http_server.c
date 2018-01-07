@@ -221,6 +221,6 @@ int http_server_init(void)
     sdk_wifi_station_connect();
 
     /* initialize tasks */
-    xTaskCreate(&httpd_task, "HTTP Daemon", 128, NULL, 2, NULL);
+    xTaskCreate(&httpd_task, "HTTP Daemon", 256, NULL, 2, NULL);
 	return 0;
 }
