@@ -46,6 +46,6 @@ int pir_init(uint8_t pin)
 		return -1;
     xTaskCreate(&pir_task, "pir mngt", 256, pir_queue, 2, NULL);
     gpio_enable(pin, GPIO_INPUT);
-    gpio_set_interrupt(pin, GPIO_INTTYPE_EDGE_POS, pir_intr_handler);
+    gpio_set_interrupt(pin, GPIO_INTTYPE_EDGE_NEG, pir_intr_handler);
 	return 0;
 }
