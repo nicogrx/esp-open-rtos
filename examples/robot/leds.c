@@ -90,11 +90,11 @@ static void leds_do_dimm(void)
 	msk = r_msk | g_msk | b_msk;
 
 	for (int i = 0; i < 3; i++) {
-		for (c = 0; c < 100; c += 2) {
+		for (c = 0; c < 30; c += 2) {
 			leds_set_all(((c << 16) | (c << 8) | c) & msk);
 			delay_ms(10);
 		}
-		for (c = 100; c > 0; c -= 2) {
+		for (c = 30; c > 0; c -= 2) {
 			leds_set_all(((c << 16) | (c << 8) | c) & msk);
 			delay_ms(10);
 		}
