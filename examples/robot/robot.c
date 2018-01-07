@@ -25,24 +25,28 @@
 #define LEDS_PIN		2
 #define US_ECHO_PIN		4
 #define US_TRIGGER_PIN	5
+#define US2_ECHO_PIN	16
+#define US2_TRIGGER_PIN	0
 #define PIR_PIN			12
 
 #define US_MAX_DISTANCE_CM 500 // 5m max
 
 static bool robot_main_task_end = false;
 static bool robot_motorctrl_task_end = false;
-static int32_t us_distance;
+static int32_t us_right_distance;
+static int32_t us_left_distance;
 static bool pir_pending = false;
 
 static int32_t get_distance_from_obstacle(ultrasonic_sensor_t *sensor)
 {
+	int32_t distance;
 	taskENTER_CRITICAL();
-	us_distance = ultrasoinc_measure_cm(sensor, US_MAX_DISTANCE_CM);
+	distance = ultrasoinc_measure_cm(sensor, US_MAX_DISTANCE_CM);
 	taskEXIT_CRITICAL();
 
-    if (us_distance < 0) {
+    if (distance < 0) {
 		printf("Error: ");
-		switch (us_distance)
+		switch (distance)
 		{
 		case ULTRASONIC_ERROR_PING:
 			printf("Cannot ping (device is in invalid state)\n");
@@ -57,9 +61,9 @@ static int32_t get_distance_from_obstacle(ultrasonic_sensor_t *sensor)
 	}
 #if 0
 	else
-		printf("%s : %d cm\n", __func__, us_distance);
+		printf("%s : %d cm\n", __func__, distance);
 #endif
-	return us_distance;
+	return distance;
 }
 
 static void robot_motorctrl_task(void *pvParameters) {
@@ -67,12 +71,21 @@ static void robot_motorctrl_task(void *pvParameters) {
         .trigger_pin = US_TRIGGER_PIN,
         .echo_pin = US_ECHO_PIN
     };
+	ultrasonic_sensor_t us2 = {
+        .trigger_pin = US2_TRIGGER_PIN,
+        .echo_pin = US2_ECHO_PIN
+    };
+
     ultrasoinc_init(&us);
+    ultrasoinc_init(&us2);
 
 	while(!robot_motorctrl_task_end) {
-		get_distance_from_obstacle(&us);
-		if (us_distance < 20)
-				printf ("%s: TODO: stop if moving forward\n", __func__);
+		us_right_distance = get_distance_from_obstacle(&us);
+		us_left_distance = get_distance_from_obstacle(&us2);
+		if (us_right_distance < 30 || us_left_distance < 30) {
+				printf ("%s: us (right, left) = (%i, %i) cms\n", __func__,
+						us_right_distance, us_left_distance);
+		}
 		vTaskDelay(10);
 	}
 }
@@ -148,7 +161,7 @@ bool robot_get_leds_status(void)
 
 int32_t robot_get_us_distance(void)
 {
-	return us_distance;
+	return us_right_distance;
 }
 
 void user_init(void)
