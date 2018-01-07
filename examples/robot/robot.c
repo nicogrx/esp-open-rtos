@@ -32,6 +32,7 @@
 static bool robot_main_task_end = false;
 static bool robot_motorctrl_task_end = false;
 static int32_t us_distance;
+static bool pir_pending = false;
 
 static int32_t get_distance_from_obstacle(ultrasonic_sensor_t *sensor)
 {
@@ -76,9 +77,15 @@ static void robot_motorctrl_task(void *pvParameters) {
 	}
 }
 
+static void pir_timer_cb(TimerHandle_t xTimer)
+{
+	pir_pending = false;
+}
+
 static void robot_main_task(void *pvParameters) {
 	int pir_ev;
 	int wbs_ev[2];
+	TimerHandle_t on_pir_timer;
 
 	uart_set_baud(0, 115200);
 	leds_init(24, LEDS_PIN);
@@ -90,6 +97,11 @@ static void robot_main_task(void *pvParameters) {
 		printf ("%s: failed to init httpd\n", __func__);
 		goto end;
 	}
+
+	on_pir_timer = xTimerCreate("on pir timer", 10000/portTICK_PERIOD_MS,
+		pdFALSE, NULL, pir_timer_cb);
+	if (on_pir_timer == NULL)
+		goto end;
 
 	while(!robot_main_task_end) {
 		if (websocket_wait_for_event(wbs_ev)) {
@@ -112,9 +124,16 @@ static void robot_main_task(void *pvParameters) {
 		}
 
 		if(pir_wait_for_event(&pir_ev)) {
-			printf("%s: pir event at %i\n", __func__, pir_ev);
-			if (!leds_is_on())
-				leds_dimm();
+			if (!pir_pending) {
+				if (xTimerStart(on_pir_timer, 0) == pdPASS) {
+					pir_pending = true;
+					printf("%s: pir event at %i\n", __func__, pir_ev);
+					/*if (!leds_is_on())
+						leds_dimm();*/
+				} else {
+					printf("%s: failed to start timer\n", __func__);
+				}
+			}
 		}
 		vTaskDelay(10);
 	}
