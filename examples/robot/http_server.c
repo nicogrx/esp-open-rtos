@@ -44,15 +44,18 @@ static void websocket_task(void *pvParameter)
         int uptime = xTaskGetTickCount() * portTICK_PERIOD_MS / 1000;
         int heap = (int) xPortGetFreeHeapSize();
         int led = (int)robot_get_leds_status();
-        int us_distance = (int)robot_get_us_distance();
+        int us_left, us_right;
+		robot_get_us_distance(&us_left, &us_right);
 
         /* Generate response in JSON format */
-        char response[96];
+        char response[128];
         int len = snprintf(response, sizeof (response),
                 "{\"uptime\" : \"%d\","
                 " \"heap\" : \"%d\","
                 " \"led\" : \"%d\","
-				" \"us_distance\" : \"%d\"}", uptime, heap, led, us_distance);
+				" \"us_left\" : \"%d\","
+				" \"us_right\" : \"%d\"}",
+				uptime, heap, led, us_left, us_right);
         if (len < sizeof (response))
             websocket_write(pcb, (unsigned char *) response, len, WS_TEXT_MODE);
 

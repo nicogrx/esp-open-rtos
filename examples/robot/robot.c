@@ -177,9 +177,10 @@ bool robot_get_leds_status(void)
 	return leds_is_on();
 }
 
-int32_t robot_get_us_distance(void)
+void robot_get_us_distance(int32_t *left, uint32_t *right)
 {
-	return us_right_distance;
+	*left = us_left_distance;
+	*right = us_right_distance;
 }
 
 void user_init(void)

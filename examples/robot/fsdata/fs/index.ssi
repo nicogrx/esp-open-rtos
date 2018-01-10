@@ -40,20 +40,21 @@
 			<h1>Status</h2>
 			<table class="table table-striped">
 				<tr>
-					<td><b>Uptime:</b></td>
-					<td id="uptime"></td>
-				</tr>
-				<tr>
-					<td><b>Free heap:</b></td>
-					<td id="heap"></td>
+					<td><b>Distance from obstacle:</b></td>
+					<td id="us_left"></td>
+					<td id="us_right"></td>
 				</tr>
 				<tr>
 					<td><b>LED state:</b></td>
 					<td id="led"></td>
 				</tr>
 				<tr>
-					<td><b>Distance from obstacle:</b></td>
-					<td id="us_distance"></td>
+					<td><b>Uptime:</b></td>
+					<td id="uptime"></td>
+				</tr>
+				<tr>
+					<td><b>Free heap:</b></td>
+					<td id="heap"></td>
 				</tr>
 			</table>
 
@@ -112,7 +113,8 @@
 					document.getElementById('uptime').innerHTML = stats.uptime + ' seconds';
 					document.getElementById('heap').innerHTML = stats.heap + ' bytes';
 					document.getElementById('led').innerHTML = (stats.led == 1) ? 'On' : 'Off';
-					document.getElementById('us_distance').innerHTML = stats.us_distance + ' cm';
+					document.getElementById('us_left').innerHTML = 'left: ' + stats.us_left + ' cm(s)';
+					document.getElementById('us_right').innerHTML = 'right: ' + stats.us_right + ' cm(s)';
 				};
 			}
 			function wsWrite(data) {
