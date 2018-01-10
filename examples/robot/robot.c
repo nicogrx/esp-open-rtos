@@ -24,11 +24,11 @@
 #include "utils.h"
 #include "http_server.h"
 
-#define LEDS_PIN		D4
-#define US_ECHO_PIN		D2
+#define US_ECHO_PIN		D0
 #define US_TRIGGER_PIN	D1
-#define US2_ECHO_PIN	D0
+#define US2_ECHO_PIN	D2
 #define US2_TRIGGER_PIN	D3
+#define LEDS_PIN		D4
 #ifdef PIR
 #define PIR_PIN			D6
 #endif
