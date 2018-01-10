@@ -94,8 +94,8 @@ static void robot_motorctrl_task(void *pvParameters) {
 		us_right_distance = get_distance_from_obstacle(&us);
 		us_left_distance = get_distance_from_obstacle(&us2);
 		if (us_right_distance < 30 || us_left_distance < 30) {
-				printf ("%s: us (right, left) = (%i, %i) cms\n", __func__,
-						us_right_distance, us_left_distance);
+				printf ("%s: us (left, right) = (%i, %i) cms\n", __func__,
+						us_left_distance, us_right_distance);
 		}
 		vTaskDelay(10);
 	}
