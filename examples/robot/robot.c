@@ -19,15 +19,16 @@
 
 #include "leds.h"
 #include "pir.h"
+#include "nodemcu.h"
 #include "utils.h"
 #include "http_server.h"
 
-#define LEDS_PIN		2
-#define US_ECHO_PIN		4
-#define US_TRIGGER_PIN	5
-#define US2_ECHO_PIN	16
-#define US2_TRIGGER_PIN	0
-#define PIR_PIN			12
+#define LEDS_PIN		D4
+#define US_ECHO_PIN		D2
+#define US_TRIGGER_PIN	D1
+#define US2_ECHO_PIN	D0
+#define US2_TRIGGER_PIN	D3
+#define PIR_PIN			D6
 
 #define US_MAX_DISTANCE_CM 500 // 5m max
 
