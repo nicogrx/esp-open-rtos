@@ -16,6 +16,7 @@
 #include "esp/uart.h"
 #include "espressif/esp_common.h"
 #include "ultrasonic/ultrasonic.h"
+#include "l293d/l293d.h"
 
 #include "leds.h"
 #include "pir.h"
@@ -29,6 +30,7 @@
 #define US2_ECHO_PIN	D0
 #define US2_TRIGGER_PIN	D3
 #define PIR_PIN			D6
+#define M1_ENABLE_PIN	D9
 
 #define US_MAX_DISTANCE_CM 500 // 5m max
 
@@ -69,14 +71,18 @@ static int32_t get_distance_from_obstacle(ultrasonic_sensor_t *sensor)
 
 static void robot_motorctrl_task(void *pvParameters) {
 	ultrasonic_sensor_t us = {
-        .trigger_pin = US_TRIGGER_PIN,
-        .echo_pin = US_ECHO_PIN
-    };
+		.trigger_pin = US_TRIGGER_PIN,
+		.echo_pin = US_ECHO_PIN
+	};
 	ultrasonic_sensor_t us2 = {
-        .trigger_pin = US2_TRIGGER_PIN,
-        .echo_pin = US2_ECHO_PIN
-    };
+		.trigger_pin = US2_TRIGGER_PIN,
+		.echo_pin = US2_ECHO_PIN
+	};
+	struct l293d_device mc_dev = {
+		.enable_1_pin = M1_ENABLE_PIN,
+	};
 
+	l293d_init(&mc_dev);
     ultrasoinc_init(&us);
     ultrasoinc_init(&us2);
 
