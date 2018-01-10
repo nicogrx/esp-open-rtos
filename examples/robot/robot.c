@@ -29,7 +29,9 @@
 #define US_TRIGGER_PIN	D1
 #define US2_ECHO_PIN	D0
 #define US2_TRIGGER_PIN	D3
+#ifdef PIR
 #define PIR_PIN			D6
+#endif
 #define M1_ENABLE_PIN	D9
 
 #define US_MAX_DISTANCE_CM 500 // 5m max
@@ -38,7 +40,9 @@ static bool robot_main_task_end = false;
 static bool robot_motorctrl_task_end = false;
 static int32_t us_right_distance;
 static int32_t us_left_distance;
+#ifdef PIR
 static bool pir_pending = false;
+#endif
 
 static int32_t get_distance_from_obstacle(ultrasonic_sensor_t *sensor)
 {
@@ -97,20 +101,25 @@ static void robot_motorctrl_task(void *pvParameters) {
 	}
 }
 
+#ifdef PIR
 static void pir_timer_cb(TimerHandle_t xTimer)
 {
 	pir_pending = false;
 }
+#endif
 
 static void robot_main_task(void *pvParameters) {
+#ifdef PIR
 	int pir_ev;
-	int wbs_ev[2];
 	TimerHandle_t on_pir_timer;
+#endif
+	int wbs_ev[2];
 
 	uart_set_baud(0, 115200);
 	leds_init(24, LEDS_PIN);
+#ifdef PIR
 	pir_init(PIR_PIN);
-
+#endif
 	xTaskCreate(&robot_motorctrl_task, "robot motor mngt", 256, NULL, 3, NULL);
 
 	if (http_server_init()) {
@@ -118,11 +127,12 @@ static void robot_main_task(void *pvParameters) {
 		goto end;
 	}
 
+#ifdef PIR
 	on_pir_timer = xTimerCreate("on pir timer", 10000/portTICK_PERIOD_MS,
 		pdFALSE, NULL, pir_timer_cb);
 	if (on_pir_timer == NULL)
 		goto end;
-
+#endif
 	while(!robot_main_task_end) {
 		if (websocket_wait_for_event(wbs_ev)) {
 			switch(wbs_ev[0]) {
@@ -142,7 +152,7 @@ static void robot_main_task(void *pvParameters) {
 				printf("%s: unknown wbs event: %i\n", __func__, wbs_ev[0]);
 			}
 		}
-
+#ifdef PIR
 		if(pir_wait_for_event(&pir_ev)) {
 			if (!pir_pending) {
 				if (xTimerStart(on_pir_timer, 0) == pdPASS) {
@@ -155,6 +165,7 @@ static void robot_main_task(void *pvParameters) {
 				}
 			}
 		}
+#endif
 		vTaskDelay(10);
 	}
 end:
