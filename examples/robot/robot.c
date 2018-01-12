@@ -13,10 +13,12 @@
 #include "task.h"
 #include "timers.h"
 
+#include "i2c/i2c.h"
 #include "esp/uart.h"
 #include "espressif/esp_common.h"
-#include "ultrasonic/ultrasonic.h"
 #include "l293d/l293d.h"
+#include "pcf8574/pcf8574.h"
+#include "ultrasonic/ultrasonic.h"
 
 #include "leds.h"
 #include "pir.h"
@@ -27,15 +29,22 @@
 #define DEBUG
 #include "trace.h"
 
+//#define US2
+
+#define I2C_BUS 0
+
+/* esp pins */
 #define US_ECHO_PIN		D0
-#define US_TRIGGER_PIN	D1
-#define US2_ECHO_PIN	D2
-#define US2_TRIGGER_PIN	D3
+#define I2C_SCL_PIN		D1
+#define I2C_SDA_PIN		D2
+#define US_TRIGGER_PIN	D3
 #define LEDS_PIN		D4
-#ifdef PIR
-#define PIR_PIN			D6
-#endif
-#define M1_ENABLE_PIN	D9
+#define US_ECHO2_PIN	D9
+#define US_TRIGGER2_PIN	D10
+
+/* pcf8574 pins */
+#define PIR_PIN			0
+#define M1_ENABLE_PIN	1
 
 #define US_MAX_DISTANCE_CM 500 // 5m max
 
@@ -46,6 +55,12 @@ static int32_t us_left_distance;
 #ifdef PIR
 static bool pir_pending = false;
 #endif
+
+#define PCF8574_ADDR 0x25
+static i2c_dev_t pcf8574_dev = {
+	.bus = I2C_BUS,
+	.addr = PCF8574_ADDR
+};
 
 static int32_t get_distance_from_obstacle(ultrasonic_sensor_t *sensor)
 {
@@ -81,21 +96,28 @@ static void robot_motorctrl_task(void *pvParameters) {
 		.trigger_pin = US_TRIGGER_PIN,
 		.echo_pin = US_ECHO_PIN
 	};
+#ifdef US2
 	ultrasonic_sensor_t us2 = {
-		.trigger_pin = US2_TRIGGER_PIN,
-		.echo_pin = US2_ECHO_PIN
+		.trigger_pin = US_TRIGGER2_PIN,
+		.echo_pin = US_ECHO2_PIN
 	};
+#endif
 	struct l293d_device mc_dev = {
 		.enable_1_pin = M1_ENABLE_PIN,
 	};
 
-	l293d_init(&mc_dev);
+	//l293d_init(&mc_dev);
     ultrasoinc_init(&us);
+#ifdef US2
     ultrasoinc_init(&us2);
-
+#endif
 	while(!robot_motorctrl_task_end) {
 		us_right_distance = get_distance_from_obstacle(&us);
+#ifdef US2
 		us_left_distance = get_distance_from_obstacle(&us2);
+#else
+		us_left_distance = 54321;
+#endif
 		if (us_right_distance < 30 || us_left_distance < 30) {
 				INFO ("%s: us (left, right) = (%i, %i) cms\n", __func__,
 						us_left_distance, us_right_distance);
@@ -119,6 +141,8 @@ static void robot_main_task(void *pvParameters) {
 	int wbs_ev[2];
 
 	uart_set_baud(0, 115200);
+    i2c_init(I2C_BUS, I2C_SCL_PIN, I2C_SDA_PIN, I2C_FREQ_100K);
+
 	leds_init(24, LEDS_PIN);
 #ifdef PIR
 	pir_init(PIR_PIN);
@@ -141,9 +165,11 @@ static void robot_main_task(void *pvParameters) {
 			switch(wbs_ev[0]) {
 			case WBS_LEDS_ON:
 				leds_turn_on((uint32_t)wbs_ev[1]);
+				pcf8574_gpio_write(&pcf8574_dev, 0, 1);
 				break;
 			case WBS_LEDS_OFF:
 				leds_turn_off();
+				pcf8574_gpio_write(&pcf8574_dev, 0, 0);
 				break;
 			case WBS_LEDS_SCROLL:
 				leds_scroll((uint32_t)wbs_ev[1]);
