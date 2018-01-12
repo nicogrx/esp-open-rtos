@@ -15,6 +15,7 @@
 #include "queue.h"
 #include "http_server.h"
 #include "robot.h"
+#include "trace.h"
 
 #define LED_PIN 2
 
@@ -37,7 +38,7 @@ static void websocket_task(void *pvParameter)
 
     for (;;) {
         if (pcb == NULL || pcb->state != ESTABLISHED) {
-            //printf("Connection closed, deleting task\n");
+            INFO("Connection closed, deleting task\n");
             break;
         }
 
@@ -103,7 +104,7 @@ static void websocket_cb(struct tcp_pcb *pcb, uint8_t *data, u16_t data_len, uin
             break;
 
         default:
-            printf("%s: unknown command: %c\n", __func__, data[0]);
+            INFO("%s: unknown command: %c\n", __func__, data[0]);
             val = 0;
             break;
     }
@@ -120,9 +121,9 @@ static void websocket_cb(struct tcp_pcb *pcb, uint8_t *data, u16_t data_len, uin
  */
 static void websocket_open_cb(struct tcp_pcb *pcb, const char *uri)
 {
-    printf("WS URI: %s\n", uri);
+    INFO("WS URI: %s\n", uri);
     if (!strcmp(uri, "/stream")) {
-        printf("request for streaming\n");
+        INFO("request for streaming\n");
         xTaskCreate(&websocket_task, "websocket_task", 256, (void *) pcb, 2, NULL);
     }
 }

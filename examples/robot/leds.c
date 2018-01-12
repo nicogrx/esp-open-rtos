@@ -4,6 +4,7 @@
 
 #include "ws2812.h"
 #include "leds.h"
+#include "trace.h"
 #include "utils.h"
 
 enum {
@@ -143,7 +144,7 @@ static void leds_task(void *pvParameters) {
 
 	while(!leds_task_end) {
         xQueueReceive(queue, &ev, portMAX_DELAY);
-		//printf("%s: ev:%i\n", __func__, ev);
+		INFO("%s: ev:%i\n", __func__, ev);
 		switch(ev) {
 		case LEDS_ON:
 			leds_on = true;
@@ -165,7 +166,7 @@ static void leds_task(void *pvParameters) {
 			leds_on = false;
 			break;
 		default:
-			printf("unkown leds ev: %i\n", ev);
+			INFO("unkown leds ev: %i\n", ev);
 		}
 	}
 	vTaskDelete(NULL);

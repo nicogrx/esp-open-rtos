@@ -24,6 +24,9 @@
 #include "utils.h"
 #include "http_server.h"
 
+#define DEBUG
+#include "trace.h"
+
 #define US_ECHO_PIN		D0
 #define US_TRIGGER_PIN	D1
 #define US2_ECHO_PIN	D2
@@ -52,23 +55,23 @@ static int32_t get_distance_from_obstacle(ultrasonic_sensor_t *sensor)
 	taskEXIT_CRITICAL();
 
     if (distance < 0) {
-		printf("Error: ");
+		INFO("Error: ");
 		switch (distance)
 		{
 		case ULTRASONIC_ERROR_PING:
-			printf("Cannot ping (device is in invalid state)\n");
+			INFO("Cannot ping (device is in invalid state)\n");
 			break;
 		case ULTRASONIC_ERROR_PING_TIMEOUT:
-			printf("Ping timeout (no device found)\n");
+			INFO("Ping timeout (no device found)\n");
 			break;
 		case ULTRASONIC_ERROR_ECHO_TIMEOUT:
-			printf("Echo timeout (i.e. distance too big)\n");
+			INFO("Echo timeout (i.e. distance too big)\n");
 			break;
 		}
 	}
 #if 0
 	else
-		printf("%s : %d cm\n", __func__, distance);
+		INFO("%s : %d cm\n", __func__, distance);
 #endif
 	return distance;
 }
@@ -94,7 +97,7 @@ static void robot_motorctrl_task(void *pvParameters) {
 		us_right_distance = get_distance_from_obstacle(&us);
 		us_left_distance = get_distance_from_obstacle(&us2);
 		if (us_right_distance < 30 || us_left_distance < 30) {
-				printf ("%s: us (left, right) = (%i, %i) cms\n", __func__,
+				INFO ("%s: us (left, right) = (%i, %i) cms\n", __func__,
 						us_left_distance, us_right_distance);
 		}
 		vTaskDelay(10);
@@ -123,7 +126,7 @@ static void robot_main_task(void *pvParameters) {
 	xTaskCreate(&robot_motorctrl_task, "robot motor mngt", 256, NULL, 3, NULL);
 
 	if (http_server_init()) {
-		printf ("%s: failed to init httpd\n", __func__);
+		INFO ("%s: failed to init httpd\n", __func__);
 		goto end;
 	}
 
@@ -149,7 +152,7 @@ static void robot_main_task(void *pvParameters) {
 				leds_dimm();
 				break;
 			default:
-				printf("%s: unknown wbs event: %i\n", __func__, wbs_ev[0]);
+				INFO("%s: unknown wbs event: %i\n", __func__, wbs_ev[0]);
 			}
 		}
 #ifdef PIR
@@ -157,11 +160,11 @@ static void robot_main_task(void *pvParameters) {
 			if (!pir_pending) {
 				if (xTimerStart(on_pir_timer, 0) == pdPASS) {
 					pir_pending = true;
-					printf("%s: pir event at %i\n", __func__, pir_ev);
+					INFO("%s: pir event at %i\n", __func__, pir_ev);
 					/*if (!leds_is_on())
 						leds_dimm();*/
 				} else {
-					printf("%s: failed to start timer\n", __func__);
+					INFO("%s: failed to start timer\n", __func__);
 				}
 			}
 		}

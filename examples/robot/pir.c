@@ -5,6 +5,7 @@
 #include "semphr.h"
 #include "task.h"
 #include "timers.h"
+#include "trace.h"
 
 static bool pir_end = false;
 static SemaphoreHandle_t pir_sem;
@@ -22,7 +23,7 @@ static void pir_task(void *pvParameters) {
 
 	while (!pir_end) {
         xSemaphoreTake(pir_sem, portMAX_DELAY);
-		//printf("%s: presence detected!\n", __func__);
+		INFO("%s: presence detected!\n", __func__);
 		ticks = xTaskGetTickCount();
 		xQueueSend(queue, &ticks, 0);
 	};
