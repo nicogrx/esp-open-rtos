@@ -10,10 +10,45 @@
 	</head>
 	<body>
 		<div class="grid main">
-			<h1>My little robot!</h1>
+			<h1 align="center">My little robot</h1>
+
 			<div id="status_box" class="alert alert-info">Loading..</div>
+
 			<div class="cover" align="center">
-				<p>LED Control</p>
+				<hr><h2>Status</h2>
+				<table class="table table-striped">
+					<tr>
+						<td><b>Distance from obstacle:</b></td>
+						<td id="us_left"></td>
+						<td id="us_right"></td>
+					</tr>
+					<tr>
+						<td><b>LED state:</b></td>
+						<td id="led"></td>
+					</tr>
+					<tr>
+						<td><b>Uptime:</b></td>
+						<td id="uptime"></td>
+					</tr>
+					<tr>
+						<td><b>Free heap:</b></td>
+						<td id="heap"></td>
+					</tr>
+				</table>
+			</div>
+			<div class="cover" align="center">
+ 				<hr><h2>Motor Control</h2>
+				<div class="wrapper">
+					<div class="box forward"><button name="forward" onclick="motor_ctrl('forward')">Forward</button></div>
+					<div class="box left"><button name="left" onclick="motor_ctrl('left')">Left</button></div>
+					<div class="box stop"><button name="stop" onclick="motor_ctrl('stop')">Stop</button></div>
+					<div class="box right"><button name="right" onclick="motor_ctrl('right')">Right</button></div>
+					<div class="box backward"><button name="backward" onclick="motor_ctrl('backward')">Backward</button></div>
+				</div>
+			</div>
+
+			<div class="cover" align="center">
+				<hr><h2>LED Control</h2>
 				<table class="table table-striped" id="led_color" height="50" width="200">
 				<tr>
 					<td>RED:<input type="number" name="red" value="50" min="0" max="255" width="40" height="40" id="led-red"></td>
@@ -37,32 +72,6 @@
 				</div>
 			</div>
 
-			<h1>Status</h2>
-			<table class="table table-striped">
-				<tr>
-					<td><b>Distance from obstacle:</b></td>
-					<td id="us_left"></td>
-					<td id="us_right"></td>
-				</tr>
-				<tr>
-					<td><b>LED state:</b></td>
-					<td id="led"></td>
-				</tr>
-				<tr>
-					<td><b>Uptime:</b></td>
-					<td id="uptime"></td>
-				</tr>
-				<tr>
-					<td><b>Free heap:</b></td>
-					<td id="heap"></td>
-				</tr>
-			</table>
-
-			<h1>How it works</h1>
-			<p>This demo uses 2 WebScokets. Status parameters are streamed by the server in JSON format every 2 seconds.
-				A <code>websocket_task</code> is created each time a specific URI is requested.</p>
-			<p>ADC values are being continuously polled by the client (i.e. your browser).
-				Each time a WebSocket frame is received on the server side, <code>websocket_cb</code> function is being called.</p>
 		</div>
 
 		<script type="text/javascript" src="js/smoothie_min.js"></script>
@@ -148,6 +157,18 @@
 						wsWrite('E' + rgb_color.toString());
 				} else
 					wsWrite('D');
+			}
+			function motor_ctrl(event) {
+				if (event == "forward")
+					wsWrite('F');
+				else if (event == "backward") 
+					wsWrite('B');
+				else if (event == "left") 
+					wsWrite('L');
+				else if (event == "right") 
+					wsWrite('R');
+				else if (event == "stop") 
+					wsWrite('P');
 			}
 		</script>
 	</body>

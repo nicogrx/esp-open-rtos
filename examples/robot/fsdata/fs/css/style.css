@@ -71,3 +71,35 @@ ul.navbar li a.active {
 .onoffswitch-checkbox:checked + .onoffswitch-label .onoffswitch-switch {
 	right: 0px; 
 }
+.forward {
+	grid-area: forward;
+}
+.left {
+	grid-area: left;
+}
+.stop {
+	grid-area: stop;
+}
+.right {
+	grid-area: right;
+}
+.backward {
+	grid-area: backward;
+}
+.wrapper {
+	display: grid;
+   	grid-gap: 5px;
+	grid-template-columns: 120px  120px  120px;
+	grid-template-areas:
+			". forward ."
+			"left stop right"
+			". backward .";
+	background-color: #fff;
+	color: #444;
+}
+.box {
+	color: #fff;
+	border-radius: 5px;
+	padding: 5px;
+	font-size: 100%;
+}
