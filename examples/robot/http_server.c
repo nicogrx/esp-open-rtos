@@ -17,8 +17,6 @@
 #include "robot.h"
 #include "trace.h"
 
-#define LED_PIN 2
-
 enum {
     SSI_UPTIME,
     SSI_FREE_HEAP,
@@ -75,7 +73,7 @@ static void websocket_task(void *pvParameter)
 static void websocket_cb(struct tcp_pcb *pcb, uint8_t *data, u16_t data_len, uint8_t mode)
 {
     uint8_t response[2];
-    uint16_t val;
+    uint16_t val = 0;
 	int ev[2];
 
     switch (data[0]) {
@@ -102,8 +100,27 @@ static void websocket_cb(struct tcp_pcb *pcb, uint8_t *data, u16_t data_len, uin
 			xQueueSend(wbs_queue, ev, 0);
             val = 0xBEEF;
             break;
-
-        default:
+		case 'F': // motor Forward
+			ev[0] = WBS_MC_FORWARD;
+			xQueueSend(wbs_queue, ev, 0);
+			break;
+		case 'B': // motor Backward
+			ev[0] = WBS_MC_BACKWARD;
+			xQueueSend(wbs_queue, ev, 0);
+			break;
+		case 'P': // motor stoP
+			ev[0] = WBS_MC_STOP;
+			xQueueSend(wbs_queue, ev, 0);
+			break;
+		case 'L': // motor Left
+			ev[0] = WBS_MC_LEFT;
+			xQueueSend(wbs_queue, ev, 0);
+			break;
+		case 'R': // motor Right
+			ev[0] = WBS_MC_RIGHT;
+			xQueueSend(wbs_queue, ev, 0);
+			break;
+		default:
             INFO("%s: unknown command: %c\n", __func__, data[0]);
             val = 0;
             break;

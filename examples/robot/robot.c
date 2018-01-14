@@ -43,10 +43,24 @@
 #define US_TRIGGER2_PIN	D10
 
 /* pcf8574 pins */
-#define PIR_PIN			0
-#define M1_ENABLE_PIN	1
+#define M1_ENABLE_PIN	0
+#define M2_ENABLE_PIN	1
+#define M1_A_PIN		2
+#define M1_B_PIN		3
+#define M2_A_PIN		4
+#define M2_B_PIN		5
+#define PIR_PIN			6
 
 #define US_MAX_DISTANCE_CM 500 // 5m max
+
+enum MC_EVENTS {
+	MC_FORWARD,
+	MC_BACKWARD,
+	MC_LEFT,
+	MC_RIGHT,
+	MC_STOP,
+	MC_NO_EV,
+};
 
 static bool robot_main_task_end = false;
 static bool robot_motorctrl_task_end = false;
@@ -56,10 +70,36 @@ static int32_t us_left_distance;
 static bool pir_pending = false;
 #endif
 
+static QueueHandle_t mc_queue;
+
 #define PCF8574_ADDR 0x25
 static i2c_dev_t pcf8574_dev = {
 	.bus = I2C_BUS,
 	.addr = PCF8574_ADDR
+};
+
+static ultrasonic_sensor_t us = {
+		.trigger_pin = US_TRIGGER_PIN,
+		.echo_pin = US_ECHO_PIN
+};
+
+#ifdef US2
+static ultrasonic_sensor_t us2 = {
+	.trigger_pin = US_TRIGGER2_PIN,
+	.echo_pin = US_ECHO2_PIN
+};
+#endif
+
+static struct l293d_device mc_dev = {
+	.enable_1_pin = M1_ENABLE_PIN,
+	.enable_1_pin = M2_ENABLE_PIN,
+	.input_a1_pin = M1_A_PIN,
+	.input_a2_pin = M1_B_PIN,
+	.input_b1_pin = M2_A_PIN,
+	.input_b2_pin = M2_B_PIN,
+	.mode = GPIO_EXPANDER,
+	.i2c = &pcf8574_dev,
+	.gpio_write = pcf8574_gpio_write,
 };
 
 static int32_t get_distance_from_obstacle(ultrasonic_sensor_t *sensor)
@@ -92,25 +132,19 @@ static int32_t get_distance_from_obstacle(ultrasonic_sensor_t *sensor)
 }
 
 static void robot_motorctrl_task(void *pvParameters) {
-	ultrasonic_sensor_t us = {
-		.trigger_pin = US_TRIGGER_PIN,
-		.echo_pin = US_ECHO_PIN
-	};
-#ifdef US2
-	ultrasonic_sensor_t us2 = {
-		.trigger_pin = US_TRIGGER2_PIN,
-		.echo_pin = US_ECHO2_PIN
-	};
-#endif
-	struct l293d_device mc_dev = {
-		.enable_1_pin = M1_ENABLE_PIN,
-	};
+	static bool obstacle = false;
+	int ev, last_ev = MC_NO_EV;
 
-	//l293d_init(&mc_dev);
+	if (l293d_init(&mc_dev))
+		goto end;
+
     ultrasoinc_init(&us);
 #ifdef US2
     ultrasoinc_init(&us2);
 #endif
+
+    mc_queue = xQueueCreate(2, sizeof(int));
+
 	while(!robot_motorctrl_task_end) {
 		us_right_distance = get_distance_from_obstacle(&us);
 #ifdef US2
@@ -121,9 +155,52 @@ static void robot_motorctrl_task(void *pvParameters) {
 		if (us_right_distance < 30 || us_left_distance < 30) {
 				INFO ("%s: us (left, right) = (%i, %i) cms\n", __func__,
 						us_left_distance, us_right_distance);
+					if(last_ev == MC_FORWARD)
+						l293d_dc_motors_stop(&mc_dev);
+					obstacle = true;
+		} else {
+			obstacle = false;
 		}
+
+		if (xQueueReceive(mc_queue, &ev, 0) == pdFALSE)
+			goto wait;
+
+		switch (ev) {
+		case MC_FORWARD:
+			if (!obstacle) {
+				l293d_dc_motor_rotate(&mc_dev, L293D_M1, L293D_CLOCKWISE);
+				l293d_dc_motor_rotate(&mc_dev, L293D_M2, L293D_CLOCKWISE);
+				l293d_dc_motors_start(&mc_dev, 1);
+			}
+			break;
+		case MC_BACKWARD:
+			/* dangerous since no way to detect obstacle */
+			l293d_dc_motor_rotate(&mc_dev, L293D_M1, L293D_ANTI_CLOCKWISE);
+			l293d_dc_motor_rotate(&mc_dev, L293D_M2, L293D_ANTI_CLOCKWISE);
+			l293d_dc_motors_start(&mc_dev, 1);
+			break;
+		case MC_LEFT:
+			l293d_dc_motor_rotate(&mc_dev, L293D_M1, L293D_CLOCKWISE);
+			l293d_dc_motor_rotate(&mc_dev, L293D_M2, L293D_ANTI_CLOCKWISE);
+			l293d_dc_motors_start(&mc_dev, 1);
+			break;
+		case MC_RIGHT:
+			l293d_dc_motor_rotate(&mc_dev, L293D_M1, L293D_ANTI_CLOCKWISE);
+			l293d_dc_motor_rotate(&mc_dev, L293D_M2, L293D_CLOCKWISE);
+			l293d_dc_motors_start(&mc_dev, 1);
+			break;
+		case MC_STOP:
+			l293d_dc_motors_stop(&mc_dev);
+			break;
+		default:
+			break;
+		}
+		last_ev = ev;
+wait:
 		vTaskDelay(10);
 	}
+end:
+	vTaskDelete(NULL);
 }
 
 #ifdef PIR
@@ -138,6 +215,7 @@ static void robot_main_task(void *pvParameters) {
 	int pir_ev;
 	TimerHandle_t on_pir_timer;
 #endif
+	int mc_ev;
 	int wbs_ev[2];
 
 	uart_set_baud(0, 115200);
@@ -165,17 +243,35 @@ static void robot_main_task(void *pvParameters) {
 			switch(wbs_ev[0]) {
 			case WBS_LEDS_ON:
 				leds_turn_on((uint32_t)wbs_ev[1]);
-				pcf8574_gpio_write(&pcf8574_dev, 0, 1);
 				break;
 			case WBS_LEDS_OFF:
 				leds_turn_off();
-				pcf8574_gpio_write(&pcf8574_dev, 0, 0);
 				break;
 			case WBS_LEDS_SCROLL:
 				leds_scroll((uint32_t)wbs_ev[1]);
 				break;
 			case WBS_LEDS_DIMM:
 				leds_dimm();
+				break;
+			case WBS_MC_FORWARD:
+				mc_ev = MC_FORWARD;
+				xQueueSend(mc_queue, &mc_ev, 0);
+				break;
+			case WBS_MC_BACKWARD:
+				mc_ev = MC_BACKWARD;
+				xQueueSend(mc_queue, &mc_ev, 0);
+				break;
+			case WBS_MC_STOP:
+				mc_ev = MC_STOP;
+				xQueueSend(mc_queue, &mc_ev, 0);
+				break;
+			case WBS_MC_LEFT:
+				mc_ev = MC_LEFT;
+				xQueueSend(mc_queue, &mc_ev, 0);
+				break;
+			case WBS_MC_RIGHT:
+				mc_ev = MC_RIGHT;
+				xQueueSend(mc_queue, &mc_ev, 0);
 				break;
 			default:
 				INFO("%s: unknown wbs event: %i\n", __func__, wbs_ev[0]);

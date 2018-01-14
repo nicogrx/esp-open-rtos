@@ -6,7 +6,11 @@ enum {
 	WBS_LEDS_OFF,
 	WBS_LEDS_SCROLL,
 	WBS_LEDS_DIMM,
-
+	WBS_MC_FORWARD,
+	WBS_MC_BACKWARD,
+	WBS_MC_LEFT,
+	WBS_MC_RIGHT,
+	WBS_MC_STOP
 };
 
 bool websocket_wait_for_event(int *ev);
