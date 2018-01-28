@@ -59,11 +59,14 @@ enum MC_EVENTS {
 	MC_LEFT,
 	MC_RIGHT,
 	MC_STOP,
+	MC_STEP_LEFT,
+	MC_STEP_RIGHT,
 	MC_NO_EV,
 };
 
 static bool robot_main_task_end = false;
 static bool robot_motorctrl_task_end = false;
+static bool mc_step_pending = false;
 static int32_t us_right_distance;
 static int32_t us_left_distance;
 #ifdef PIR
@@ -131,9 +134,16 @@ static int32_t get_distance_from_obstacle(ultrasonic_sensor_t *sensor)
 	return distance;
 }
 
+static void mc_step_timer_cb(TimerHandle_t xTimer)
+{
+	l293d_dc_motors_stop(&mc_dev);
+	mc_step_pending = false;
+}
+
 static void robot_motorctrl_task(void *pvParameters) {
 	static bool obstacle = false;
 	int ev, last_ev = MC_NO_EV;
+	TimerHandle_t on_mc_step_timer;
 
 	if (l293d_init(&mc_dev))
 		goto end;
@@ -144,6 +154,11 @@ static void robot_motorctrl_task(void *pvParameters) {
 #endif
 
     mc_queue = xQueueCreate(2, sizeof(int));
+
+	on_mc_step_timer = xTimerCreate("on mc step timer", 100/portTICK_PERIOD_MS,
+		pdFALSE, NULL, mc_step_timer_cb);
+	if (on_mc_step_timer == NULL)
+		goto end;
 
 	while(!robot_motorctrl_task_end) {
 		us_right_distance = get_distance_from_obstacle(&us);
@@ -162,6 +177,8 @@ static void robot_motorctrl_task(void *pvParameters) {
 			obstacle = false;
 		}
 
+		if (mc_step_pending)
+			goto wait;
 		if (xQueueReceive(mc_queue, &ev, 0) == pdFALSE)
 			goto wait;
 
@@ -179,11 +196,25 @@ static void robot_motorctrl_task(void *pvParameters) {
 			l293d_dc_motor_rotate(&mc_dev, L293D_M2, L293D_ANTI_CLOCKWISE);
 			l293d_dc_motors_start(&mc_dev, 1);
 			break;
+		case MC_STEP_LEFT:
+			if (xTimerStart(on_mc_step_timer, 0) == pdPASS) {
+					mc_step_pending = true;
+			} else {
+				INFO("%s: failed to start timer\n", __func__);
+			}
+			/* fall through */
 		case MC_LEFT:
 			l293d_dc_motor_rotate(&mc_dev, L293D_M1, L293D_CLOCKWISE);
 			l293d_dc_motor_rotate(&mc_dev, L293D_M2, L293D_ANTI_CLOCKWISE);
 			l293d_dc_motors_start(&mc_dev, 1);
 			break;
+		case MC_STEP_RIGHT:
+			if (xTimerStart(on_mc_step_timer, 0) == pdPASS) {
+					mc_step_pending = true;
+			} else {
+				INFO("%s: failed to start timer\n", __func__);
+			}
+			/* fall through */
 		case MC_RIGHT:
 			l293d_dc_motor_rotate(&mc_dev, L293D_M1, L293D_ANTI_CLOCKWISE);
 			l293d_dc_motor_rotate(&mc_dev, L293D_M2, L293D_CLOCKWISE);
