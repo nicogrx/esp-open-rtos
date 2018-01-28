@@ -297,11 +297,11 @@ static void robot_main_task(void *pvParameters) {
 				xQueueSend(mc_queue, &mc_ev, 0);
 				break;
 			case WBS_MC_LEFT:
-				mc_ev = MC_LEFT;
+				mc_ev = MC_STEP_LEFT;
 				xQueueSend(mc_queue, &mc_ev, 0);
 				break;
 			case WBS_MC_RIGHT:
-				mc_ev = MC_RIGHT;
+				mc_ev = MC_STEP_RIGHT;
 				xQueueSend(mc_queue, &mc_ev, 0);
 				break;
 			default:
