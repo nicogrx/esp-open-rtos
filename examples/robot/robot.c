@@ -21,6 +21,8 @@
 #include "pcf8574/pcf8574.h"
 #include "ultrasonic/ultrasonic.h"
 
+#include "access_point.h"
+#include "cam.h"
 #include "leds.h"
 #include "pir.h"
 #include "nodemcu.h"
@@ -283,6 +285,9 @@ static void robot_main_task(void *pvParameters) {
 		INFO ("%s: failed to init httpd\n", __func__);
 		goto end;
 	}
+	if (!cam_setup(SPI_BUS, SPI_CS, I2C_BUS))
+		goto end;
+	access_point_init();
 
 #ifdef PIR
 	on_pir_timer = xTimerCreate("on pir timer", 10000/portTICK_PERIOD_MS,
@@ -290,6 +295,7 @@ static void robot_main_task(void *pvParameters) {
 	if (on_pir_timer == NULL)
 		goto end;
 #endif
+
 	while(!robot_main_task_end) {
 		if (websocket_wait_for_event(wbs_ev)) {
 			switch(wbs_ev[0]) {
