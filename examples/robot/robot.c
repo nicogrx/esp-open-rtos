@@ -29,6 +29,7 @@
 #define DEBUG
 #include "trace.h"
 
+#define US1
 //#define US2
 
 #define I2C_BUS 0
@@ -80,12 +81,12 @@ static i2c_dev_t pcf8574_dev = {
 	.bus = I2C_BUS,
 	.addr = PCF8574_ADDR
 };
-
+#ifdef US1
 static ultrasonic_sensor_t us = {
 		.trigger_pin = US_TRIGGER_PIN,
 		.echo_pin = US_ECHO_PIN
 };
-
+#endif
 #ifdef US2
 static ultrasonic_sensor_t us2 = {
 	.trigger_pin = US_TRIGGER2_PIN,
@@ -148,7 +149,9 @@ static void robot_motorctrl_task(void *pvParameters) {
 	if (l293d_init(&mc_dev))
 		goto end;
 
+#ifdef US1
     ultrasoinc_init(&us);
+#endif
 #ifdef US2
     ultrasoinc_init(&us2);
 #endif
@@ -161,7 +164,11 @@ static void robot_motorctrl_task(void *pvParameters) {
 		goto end;
 
 	while(!robot_motorctrl_task_end) {
+#ifdef US1
 		us_right_distance = get_distance_from_obstacle(&us);
+#else
+		us_right_distance = 54321;
+#endif
 #ifdef US2
 		us_left_distance = get_distance_from_obstacle(&us2);
 #else
