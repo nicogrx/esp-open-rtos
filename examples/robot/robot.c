@@ -14,6 +14,7 @@
 #include "timers.h"
 
 #include "i2c/i2c.h"
+#include <esp/spi.h>
 #include "esp/uart.h"
 #include "espressif/esp_common.h"
 #include "l293d/l293d.h"
@@ -33,6 +34,8 @@
 //#define US2
 
 #define I2C_BUS 0
+#define SPI_BUS 1
+#define SPI_CS  D9
 
 /* esp pins */
 #define US_ECHO_PIN		D0
@@ -104,6 +107,14 @@ static struct l293d_device mc_dev = {
 	.mode = GPIO_EXPANDER,
 	.i2c = &pcf8574_dev,
 	.gpio_write = pcf8574_gpio_write,
+};
+
+static const spi_settings_t spi_config = {
+    .endianness = SPI_BIG_ENDIAN,
+    .msb = true,
+    .minimal_pins = true,
+    .mode = SPI_MODE0,
+    .freq_divider = SPI_FREQ_DIV_2M
 };
 
 static int32_t get_distance_from_obstacle(ultrasonic_sensor_t *sensor)
@@ -258,7 +269,10 @@ static void robot_main_task(void *pvParameters) {
 
 	uart_set_baud(0, 115200);
     i2c_init(I2C_BUS, I2C_SCL_PIN, I2C_SDA_PIN, I2C_FREQ_100K);
-
+	if (!spi_set_settings(SPI_BUS, &spi_config)) {
+		INFO("%s: failed to init SPI\n", __func__);
+		goto end;
+	}
 	leds_init(24, LEDS_PIN);
 #ifdef PIR
 	pir_init(PIR_PIN);
