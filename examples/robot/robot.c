@@ -116,7 +116,7 @@ static const spi_settings_t spi_config = {
     .msb = true,
     .minimal_pins = true,
     .mode = SPI_MODE0,
-    .freq_divider = SPI_FREQ_DIV_2M
+    .freq_divider = SPI_FREQ_DIV_8M
 };
 
 static int32_t get_distance_from_obstacle(ultrasonic_sensor_t *sensor)
