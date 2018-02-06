@@ -253,7 +253,7 @@ static void robot_motorctrl_task(void *pvParameters) {
 		}
 		last_ev = ev;
 wait:
-		vTaskDelay(10);
+		vTaskDelay(20);
 	}
 end:
 	vTaskDelete(NULL);
