@@ -11,8 +11,23 @@
 	<body>
 		<div class="grid main">
 			<h1 align="center">My little robot</h1>
-
 			<div id="status_box" class="alert alert-info">Loading..</div>
+			<div class="cover" align="center">
+				<hr><h2>Camera</h2>
+				<canvas id="canvas_img" width="320" height="240"></canvas>
+			</div>
+			<div class="cover" align="center">
+				<hr><h2>Motor Control</h2>
+				<div class="wrapper">
+					<div class="box forward"><button name="forward" onclick="motor_ctrl('forward')">Forward</button></div>
+					<div class="box turn_left"><button name="turn_left" onclick="motor_ctrl('turn_left')">Turn Left</button></div>
+					<div class="box step_left"><button name="step_left" onclick="motor_ctrl('step_left')">Step Left</button></div>
+					<div class="box stop"><button name="stop" onclick="motor_ctrl('stop')">Stop</button></div>
+					<div class="box step_right"><button name="step_right" onclick="motor_ctrl('step_right')">Step Right</button></div>
+					<div class="box turn_right"><button name="turn_right" onclick="motor_ctrl('turn_right')">Turn Right</button></div>
+					<div class="box backward"><button name="backward" onclick="motor_ctrl('backward')">Backward</button></div>
+				</div>
+			</div>
 			<div class="cover" align="center">
 				<hr><h2>Status</h2>
 				<table class="table table-striped">
@@ -35,21 +50,6 @@
 					</tr>
 				</table>
 			</div>
-			<div class="cover" align="center">
-				<hr><h2>Camera</h2>
-				<canvas id="canvas_img" width="320" height="240"></canvas>
-			</div>
-			<div class="cover" align="center">
- 				<hr><h2>Motor Control</h2>
-				<div class="wrapper">
-					<div class="box forward"><button name="forward" onclick="motor_ctrl('forward')">Forward</button></div>
-					<div class="box left"><button name="left" onclick="motor_ctrl('left')">Left</button></div>
-					<div class="box stop"><button name="stop" onclick="motor_ctrl('stop')">Stop</button></div>
-					<div class="box right"><button name="right" onclick="motor_ctrl('right')">Right</button></div>
-					<div class="box backward"><button name="backward" onclick="motor_ctrl('backward')">Backward</button></div>
-				</div>
-			</div>
-
 			<div class="cover" align="center">
 				<hr><h2>LED Control</h2>
 				<table class="table table-striped" id="led_color" height="50" width="200">
@@ -74,7 +74,6 @@
 					</label>
 				</div>
 			</div>
-
 		</div>
 
 		<script type="text/javascript" src="js/smoothie_min.js"></script>
@@ -181,13 +180,17 @@
 			function motor_ctrl(event) {
 				if (event == "forward")
 					wsWrite('F');
-				else if (event == "backward") 
+				else if (event == "backward")
 					wsWrite('B');
-				else if (event == "left") 
+				else if (event == "step_left")
 					wsWrite('L');
-				else if (event == "right") 
+				else if (event == "step_right")
 					wsWrite('R');
-				else if (event == "stop") 
+				else if (event == "turn_left")
+					wsWrite('T');
+				else if (event == "turn_right")
+					wsWrite('U');
+				else if (event == "stop")
 					wsWrite('P');
 			}
 		</script>

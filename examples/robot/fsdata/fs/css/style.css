@@ -74,14 +74,20 @@ ul.navbar li a.active {
 .forward {
 	grid-area: forward;
 }
-.left {
-	grid-area: left;
+.step_left {
+	grid-area: step_left;
+}
+.turn_left {
+	grid-area: turn_left;
 }
 .stop {
 	grid-area: stop;
 }
-.right {
-	grid-area: right;
+.step_right {
+	grid-area: step_right;
+}
+.turn_right {
+	grid-area: turn_right;
 }
 .backward {
 	grid-area: backward;
@@ -89,11 +95,11 @@ ul.navbar li a.active {
 .wrapper {
 	display: grid;
    	grid-gap: 5px;
-	grid-template-columns: 120px  120px  120px;
+	grid-template-columns: 120px 120px 120px 120px 120px;
 	grid-template-areas:
-			". forward ."
-			"left stop right"
-			". backward .";
+			". . forward . ."
+			"turn_left step_left stop step_right turn_right"
+			". . backward . .";
 	background-color: #fff;
 	color: #444;
 }
