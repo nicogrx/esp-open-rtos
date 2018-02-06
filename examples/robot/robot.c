@@ -88,8 +88,8 @@ static i2c_dev_t pcf8574_dev = {
 };
 #ifdef US1
 static ultrasonic_sensor_t us = {
-		.trigger_pin = US_TRIGGER_PIN,
-		.echo_pin = US_ECHO_PIN
+	.trigger_pin = US_TRIGGER_PIN,
+	.echo_pin = US_ECHO_PIN
 };
 #endif
 #ifdef US2
@@ -112,11 +112,11 @@ static struct l293d_device mc_dev = {
 };
 
 static const spi_settings_t spi_config = {
-    .endianness = SPI_BIG_ENDIAN,
-    .msb = true,
-    .minimal_pins = true,
-    .mode = SPI_MODE0,
-    .freq_divider = SPI_FREQ_DIV_8M
+	.endianness = SPI_BIG_ENDIAN,
+	.msb = true,
+	.minimal_pins = true,
+	.mode = SPI_MODE0,
+	.freq_divider = SPI_FREQ_DIV_8M
 };
 
 static int32_t get_distance_from_obstacle(ultrasonic_sensor_t *sensor)
@@ -126,7 +126,7 @@ static int32_t get_distance_from_obstacle(ultrasonic_sensor_t *sensor)
 	distance = ultrasoinc_measure_cm(sensor, US_MAX_DISTANCE_CM);
 	taskEXIT_CRITICAL();
 
-    if (distance < 0) {
+	if (distance < 0) {
 		INFO("Error: ");
 		switch (distance)
 		{
@@ -163,16 +163,16 @@ static void robot_motorctrl_task(void *pvParameters) {
 		goto end;
 
 #ifdef US1
-    ultrasoinc_init(&us);
+	ultrasoinc_init(&us);
 #endif
 #ifdef US2
-    ultrasoinc_init(&us2);
+	ultrasoinc_init(&us2);
 #endif
 
-    mc_queue = xQueueCreate(2, sizeof(int));
+	mc_queue = xQueueCreate(2, sizeof(int));
 
 	on_mc_step_timer = xTimerCreate("on mc step timer", 100/portTICK_PERIOD_MS,
-		pdFALSE, NULL, mc_step_timer_cb);
+			pdFALSE, NULL, mc_step_timer_cb);
 	if (on_mc_step_timer == NULL)
 		goto end;
 
@@ -188,11 +188,11 @@ static void robot_motorctrl_task(void *pvParameters) {
 		us_left_distance = 54321;
 #endif
 		if (us_right_distance < 30 || us_left_distance < 30) {
-				INFO ("%s: us (left, right) = (%i, %i) cms\n", __func__,
-						us_left_distance, us_right_distance);
-					if(last_ev == MC_FORWARD)
-						l293d_dc_motors_stop(&mc_dev);
-					obstacle = true;
+			/*INFO ("%s: us (left, right) = (%i, %i) cms\n", __func__,
+					us_left_distance, us_right_distance);*/
+			if(last_ev == MC_FORWARD)
+				l293d_dc_motors_stop(&mc_dev);
+			obstacle = true;
 		} else {
 			obstacle = false;
 		}
@@ -218,7 +218,7 @@ static void robot_motorctrl_task(void *pvParameters) {
 			break;
 		case MC_STEP_LEFT:
 			if (xTimerStart(on_mc_step_timer, 0) == pdPASS) {
-					mc_step_pending = true;
+				mc_step_pending = true;
 			} else {
 				INFO("%s: failed to start timer\n", __func__);
 			}
@@ -230,7 +230,7 @@ static void robot_motorctrl_task(void *pvParameters) {
 			break;
 		case MC_STEP_RIGHT:
 			if (xTimerStart(on_mc_step_timer, 0) == pdPASS) {
-					mc_step_pending = true;
+				mc_step_pending = true;
 			} else {
 				INFO("%s: failed to start timer\n", __func__);
 			}
@@ -270,7 +270,7 @@ static void robot_main_task(void *pvParameters) {
 	int wbs_ev[2];
 
 	uart_set_baud(0, 115200);
-    i2c_init(I2C_BUS, I2C_SCL_PIN, I2C_SDA_PIN, I2C_FREQ_100K);
+	i2c_init(I2C_BUS, I2C_SCL_PIN, I2C_SDA_PIN, I2C_FREQ_100K);
 	if (!spi_set_settings(SPI_BUS, &spi_config)) {
 		INFO("%s: failed to init SPI\n", __func__);
 		goto end;
@@ -291,7 +291,7 @@ static void robot_main_task(void *pvParameters) {
 
 #ifdef PIR
 	on_pir_timer = xTimerCreate("on pir timer", 10000/portTICK_PERIOD_MS,
-		pdFALSE, NULL, pir_timer_cb);
+			pdFALSE, NULL, pir_timer_cb);
 	if (on_pir_timer == NULL)
 		goto end;
 #endif
@@ -342,7 +342,7 @@ static void robot_main_task(void *pvParameters) {
 					pir_pending = true;
 					INFO("%s: pir event at %i\n", __func__, pir_ev);
 					/*if (!leds_is_on())
-						leds_dimm();*/
+					  leds_dimm();*/
 				} else {
 					INFO("%s: failed to start timer\n", __func__);
 				}
