@@ -67,6 +67,8 @@ enum MC_EVENTS {
 	MC_STOP,
 	MC_STEP_LEFT,
 	MC_STEP_RIGHT,
+	MC_TURN_LEFT,
+	MC_TURN_RIGHT,
 	MC_NO_EV,
 };
 
@@ -154,6 +156,40 @@ static void mc_step_timer_cb(TimerHandle_t xTimer)
 	mc_step_pending = false;
 }
 
+static void robot_go_timed(int ev, TimerHandle_t on_mc_step_timer, bool timed, TickType_t time)
+{
+	if (timed) {
+		if (xTimerStart(on_mc_step_timer, 0) == pdPASS) {
+			mc_step_pending = true;
+		} else {
+			INFO("%s: failed to start timer\n", __func__);
+		}
+		if (time) {
+			if (xTimerChangePeriod(on_mc_step_timer, time, 0) != pdPASS)
+				INFO("%s: failed to update timer period\n", __func__);
+		}
+	}
+	switch(ev) {
+	case MC_FORWARD:
+		l293d_dc_motor_rotate(&mc_dev, L293D_M1, L293D_CLOCKWISE);
+		l293d_dc_motor_rotate(&mc_dev, L293D_M2, L293D_CLOCKWISE);
+		break;
+	case MC_BACKWARD:
+		l293d_dc_motor_rotate(&mc_dev, L293D_M1, L293D_ANTI_CLOCKWISE);
+		l293d_dc_motor_rotate(&mc_dev, L293D_M2, L293D_ANTI_CLOCKWISE);
+		break;
+	case MC_LEFT:
+		l293d_dc_motor_rotate(&mc_dev, L293D_M1, L293D_CLOCKWISE);
+		l293d_dc_motor_rotate(&mc_dev, L293D_M2, L293D_ANTI_CLOCKWISE);
+		break;
+	case MC_RIGHT:
+		l293d_dc_motor_rotate(&mc_dev, L293D_M1, L293D_ANTI_CLOCKWISE);
+		l293d_dc_motor_rotate(&mc_dev, L293D_M2, L293D_CLOCKWISE);
+		break;
+	}
+	l293d_dc_motors_start(&mc_dev, 1);
+}
+
 static void robot_motorctrl_task(void *pvParameters) {
 	static bool obstacle = false;
 	int ev, last_ev = MC_NO_EV;
@@ -204,46 +240,29 @@ static void robot_motorctrl_task(void *pvParameters) {
 
 		switch (ev) {
 		case MC_FORWARD:
-			if (!obstacle) {
-				l293d_dc_motor_rotate(&mc_dev, L293D_M1, L293D_CLOCKWISE);
-				l293d_dc_motor_rotate(&mc_dev, L293D_M2, L293D_CLOCKWISE);
-				l293d_dc_motors_start(&mc_dev, 1);
-			}
+			if (!obstacle)
+				robot_go_timed(MC_FORWARD, NULL, false, 0);
 			break;
 		case MC_BACKWARD:
-			/* dangerous since no way to detect obstacle */
-			l293d_dc_motor_rotate(&mc_dev, L293D_M1, L293D_ANTI_CLOCKWISE);
-			l293d_dc_motor_rotate(&mc_dev, L293D_M2, L293D_ANTI_CLOCKWISE);
-			l293d_dc_motors_start(&mc_dev, 1);
-			if (xTimerStart(on_mc_step_timer, 0) == pdPASS) {
-				mc_step_pending = true;
-			} else {
-				INFO("%s: failed to start timer\n", __func__);
-			}
+			robot_go_timed(MC_BACKWARD, on_mc_step_timer, true, 10);
 			break;
 		case MC_STEP_LEFT:
-			if (xTimerStart(on_mc_step_timer, 0) == pdPASS) {
-				mc_step_pending = true;
-			} else {
-				INFO("%s: failed to start timer\n", __func__);
-			}
-			/* fall through */
+			robot_go_timed(MC_LEFT, on_mc_step_timer, true, 10);
+			break;
+		case MC_TURN_LEFT:
+			robot_go_timed(MC_LEFT, on_mc_step_timer, true, 80);
+			break;
 		case MC_LEFT:
-			l293d_dc_motor_rotate(&mc_dev, L293D_M1, L293D_CLOCKWISE);
-			l293d_dc_motor_rotate(&mc_dev, L293D_M2, L293D_ANTI_CLOCKWISE);
-			l293d_dc_motors_start(&mc_dev, 1);
+			robot_go_timed(MC_LEFT, NULL, false, 0);
 			break;
 		case MC_STEP_RIGHT:
-			if (xTimerStart(on_mc_step_timer, 0) == pdPASS) {
-				mc_step_pending = true;
-			} else {
-				INFO("%s: failed to start timer\n", __func__);
-			}
-			/* fall through */
+			robot_go_timed(MC_RIGHT, on_mc_step_timer, true, 10);
+			break;
+		case MC_TURN_RIGHT:
+			robot_go_timed(MC_RIGHT, on_mc_step_timer, true, 80);
+			break;
 		case MC_RIGHT:
-			l293d_dc_motor_rotate(&mc_dev, L293D_M1, L293D_ANTI_CLOCKWISE);
-			l293d_dc_motor_rotate(&mc_dev, L293D_M2, L293D_CLOCKWISE);
-			l293d_dc_motors_start(&mc_dev, 1);
+			robot_go_timed(MC_RIGHT, NULL, false, 0);
 			break;
 		case MC_STOP:
 			l293d_dc_motors_stop(&mc_dev);
@@ -328,12 +347,20 @@ static void robot_main_task(void *pvParameters) {
 				mc_ev = MC_STOP;
 				xQueueSend(mc_queue, &mc_ev, 0);
 				break;
-			case WBS_MC_LEFT:
+			case WBS_MC_STEP_LEFT:
 				mc_ev = MC_STEP_LEFT;
 				xQueueSend(mc_queue, &mc_ev, 0);
 				break;
-			case WBS_MC_RIGHT:
+			case WBS_MC_STEP_RIGHT:
 				mc_ev = MC_STEP_RIGHT;
+				xQueueSend(mc_queue, &mc_ev, 0);
+				break;
+			case WBS_MC_TURN_LEFT:
+				mc_ev = MC_TURN_LEFT;
+				xQueueSend(mc_queue, &mc_ev, 0);
+				break;
+			case WBS_MC_TURN_RIGHT:
+				mc_ev = MC_TURN_RIGHT;
 				xQueueSend(mc_queue, &mc_ev, 0);
 				break;
 			default:

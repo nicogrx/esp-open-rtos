@@ -77,6 +77,10 @@ static void websocket_cb(struct tcp_pcb *pcb, uint8_t *data, u16_t data_len, uin
 	int ev[2];
 
     switch (data[0]) {
+		case 'B': // motor Backward
+			ev[0] = WBS_MC_BACKWARD;
+			xQueueSend(wbs_queue, ev, 0);
+			break;
         case 'D': // Disable LED
 			ev[0] = WBS_LEDS_OFF;
 			xQueueSend(wbs_queue, ev, 0);
@@ -88,36 +92,40 @@ static void websocket_cb(struct tcp_pcb *pcb, uint8_t *data, u16_t data_len, uin
 			xQueueSend(wbs_queue, ev, 0);
             val = 0xBEEF;
             break;
+		case 'F': // motor Forward
+			ev[0] = WBS_MC_FORWARD;
+			xQueueSend(wbs_queue, ev, 0);
+			break;
+		case 'L': // motor Left
+			ev[0] = WBS_MC_STEP_LEFT;
+			xQueueSend(wbs_queue, ev, 0);
+			break;
+		case 'M': // Dimm LED
+			ev[0] = WBS_LEDS_DIMM;
+			ev[1] = atoi((char *)&data[1]);
+			xQueueSend(wbs_queue, ev, 0);
+            val = 0xBEEF;
+            break;
+		case 'P': // motor stoP
+			ev[0] = WBS_MC_STOP;
+			xQueueSend(wbs_queue, ev, 0);
+			break;
+		case 'R': // motor Right
+			ev[0] = WBS_MC_STEP_RIGHT;
+			xQueueSend(wbs_queue, ev, 0);
+			break;
         case 'S': // Scroll LED
 			ev[0] = WBS_LEDS_SCROLL;
 			ev[1] = atoi((char *)&data[1]);
 			xQueueSend(wbs_queue, ev, 0);
             val = 0xBEEF;
             break;
-		case 'M': // Dimml LED
-			ev[0] = WBS_LEDS_DIMM;
-			ev[1] = atoi((char *)&data[1]);
-			xQueueSend(wbs_queue, ev, 0);
-            val = 0xBEEF;
-            break;
-		case 'F': // motor Forward
-			ev[0] = WBS_MC_FORWARD;
+		case 'T': // Turn Left
+			ev[0] = WBS_MC_TURN_LEFT;
 			xQueueSend(wbs_queue, ev, 0);
 			break;
-		case 'B': // motor Backward
-			ev[0] = WBS_MC_BACKWARD;
-			xQueueSend(wbs_queue, ev, 0);
-			break;
-		case 'P': // motor stoP
-			ev[0] = WBS_MC_STOP;
-			xQueueSend(wbs_queue, ev, 0);
-			break;
-		case 'L': // motor Left
-			ev[0] = WBS_MC_LEFT;
-			xQueueSend(wbs_queue, ev, 0);
-			break;
-		case 'R': // motor Right
-			ev[0] = WBS_MC_RIGHT;
+		case 'U': // Turn Right
+			ev[0] = WBS_MC_TURN_RIGHT;
 			xQueueSend(wbs_queue, ev, 0);
 			break;
 		default:
