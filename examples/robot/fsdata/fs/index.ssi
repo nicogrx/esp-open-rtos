@@ -116,9 +116,9 @@
 				var uri = "/stream"
 				var ws = new WebSocket("ws://" + location.host + uri);
 				ws.onmessage = function(evt) {
-					console.log(evt.data);
+					//console.log(evt.data);
 					var stats = JSON.parse(evt.data);
-					console.log(stats);
+					//console.log(stats);
 					document.getElementById('uptime').innerHTML = stats.uptime + ' seconds';
 					document.getElementById('heap').innerHTML = stats.heap + ' bytes';
 					document.getElementById('led').innerHTML = (stats.led == 1) ? 'On' : 'Off';
