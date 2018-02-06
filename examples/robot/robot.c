@@ -33,7 +33,7 @@
 #include "trace.h"
 
 #define US1
-//#define US2
+#define US2
 
 #define I2C_BUS 0
 #define SPI_BUS 1
@@ -45,7 +45,7 @@
 #define I2C_SDA_PIN		D2
 #define US_TRIGGER_PIN	D3
 #define LEDS_PIN		D4
-#define US_ECHO2_PIN	D9
+#define US_ECHO2_PIN	D8
 #define US_TRIGGER2_PIN	D10
 
 /* pcf8574 pins */
