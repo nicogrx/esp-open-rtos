@@ -13,7 +13,6 @@
 			<h1 align="center">My little robot</h1>
 
 			<div id="status_box" class="alert alert-info">Loading..</div>
-
 			<div class="cover" align="center">
 				<hr><h2>Status</h2>
 				<table class="table table-striped">
@@ -35,6 +34,10 @@
 						<td id="heap"></td>
 					</tr>
 				</table>
+			</div>
+			<div class="cover" align="center">
+				<hr><h2>Camera</h2>
+				<canvas id="canvas_img" width="320" height="240"></canvas>
 			</div>
 			<div class="cover" align="center">
  				<hr><h2>Motor Control</h2>
@@ -79,8 +82,25 @@
 			var ws;
 			var retries;
 			var series = new TimeSeries();
+			var img;
 			window.onload = function() {
 				wsOpen();
+				img = new Image();
+				img.onload = function() {
+					draw_canvas();
+					setTimeout(timed_refresh, 1000);
+				}
+				// set src AFTER assigning load
+				img.src = "http://" + window.location.hostname + ":8081?dummy=" + Math.random();
+			}
+			function timed_refresh() {
+				img.src = "http://" + window.location.hostname + ":8081?dummy=" + Math.random();
+			}
+			function draw_canvas() {
+				var canvas = document.getElementById("canvas_img");
+				var ctx = canvas.getContext("2d");
+				ctx.clearRect(0, 0, canvas.width, canvas.height);
+				ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 			}
 			function setMsg(cls, text) {
 				sbox = document.getElementById('status_box');
