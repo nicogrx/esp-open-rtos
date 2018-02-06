@@ -215,6 +215,11 @@ static void robot_motorctrl_task(void *pvParameters) {
 			l293d_dc_motor_rotate(&mc_dev, L293D_M1, L293D_ANTI_CLOCKWISE);
 			l293d_dc_motor_rotate(&mc_dev, L293D_M2, L293D_ANTI_CLOCKWISE);
 			l293d_dc_motors_start(&mc_dev, 1);
+			if (xTimerStart(on_mc_step_timer, 0) == pdPASS) {
+				mc_step_pending = true;
+			} else {
+				INFO("%s: failed to start timer\n", __func__);
+			}
 			break;
 		case MC_STEP_LEFT:
 			if (xTimerStart(on_mc_step_timer, 0) == pdPASS) {
