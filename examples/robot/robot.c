@@ -293,6 +293,8 @@ static void robot_main_task(void *pvParameters) {
 	int mc_ev;
 	int wbs_ev[2];
 
+	sdk_system_update_cpu_freq(160);
+
 	uart_set_baud(0, 115200);
 	i2c_init(I2C_BUS, I2C_SCL_PIN, I2C_SDA_PIN, I2C_FREQ_100K);
 	if (!spi_set_settings(SPI_BUS, &spi_config)) {

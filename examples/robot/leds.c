@@ -2,7 +2,9 @@
 #include "queue.h"
 #include "task.h"
 
+#define CPU_FREQ_160
 #include "ws2812.h"
+
 #include "leds.h"
 #include "trace.h"
 #include "utils.h"
