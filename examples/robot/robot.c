@@ -322,6 +322,9 @@ static void robot_main_task(void *pvParameters) {
 		goto end;
 #endif
 
+	/* ugly way to make sure all rbg leds are off */
+	leds_dimm();
+
 	while(!robot_main_task_end) {
 		if (websocket_wait_for_event(wbs_ev)) {
 			switch(wbs_ev[0]) {
