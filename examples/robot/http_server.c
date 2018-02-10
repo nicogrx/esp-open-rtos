@@ -128,6 +128,10 @@ static void websocket_cb(struct tcp_pcb *pcb, uint8_t *data, u16_t data_len, uin
 			ev[0] = WBS_MC_TURN_RIGHT;
 			xQueueSend(wbs_queue, ev, 0);
 			break;
+		case 'W': // Power down;
+			ev[0] = WBS_POWER_DOWN;
+			xQueueSend(wbs_queue, ev, 0);
+			break;
 		default:
             INFO("%s: unknown command: %c\n", __func__, data[0]);
             val = 0;

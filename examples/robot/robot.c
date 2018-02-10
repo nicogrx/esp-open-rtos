@@ -74,6 +74,7 @@ enum MC_EVENTS {
 
 static bool robot_main_task_end = false;
 static bool robot_motorctrl_task_end = false;
+static volatile bool robot_motorctrl_task_ended = false;
 static bool mc_step_pending = false;
 static int32_t us_right_distance;
 static int32_t us_left_distance;
@@ -275,6 +276,7 @@ wait:
 		vTaskDelay(20);
 	}
 end:
+	robot_motorctrl_task_ended = true;
 	vTaskDelete(NULL);
 }
 
@@ -285,7 +287,17 @@ static void pir_timer_cb(TimerHandle_t xTimer)
 }
 #endif
 
-static void robot_main_task(void *pvParameters) {
+static void robot_sleep(uint32_t time_in_us)
+{
+	access_point_destroy();
+	robot_motorctrl_task_end = true;
+	while (!robot_motorctrl_task_ended);
+	l293d_dc_motors_stop(&mc_dev);
+	sdk_system_deep_sleep(time_in_us);
+}
+
+static void robot_main_task(void *pvParameters)
+{
 #ifdef PIR
 	int pir_ev;
 	TimerHandle_t on_pir_timer;
@@ -302,6 +314,7 @@ static void robot_main_task(void *pvParameters) {
 		goto end;
 	}
 	leds_init(24, LEDS_PIN);
+
 #ifdef PIR
 	pir_init(PIR_PIN);
 #endif
@@ -328,6 +341,9 @@ static void robot_main_task(void *pvParameters) {
 	while(!robot_main_task_end) {
 		if (websocket_wait_for_event(wbs_ev)) {
 			switch(wbs_ev[0]) {
+			case WBS_POWER_DOWN:
+				robot_sleep(60000000);
+				break;
 			case WBS_LEDS_ON:
 				leds_turn_on((uint32_t)wbs_ev[1]);
 				break;

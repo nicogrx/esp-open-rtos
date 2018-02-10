@@ -13,6 +13,7 @@
 			<h1 align="center">My little robot</h1>
 			<div id="status_box" class="alert alert-info">Loading..</div>
 			<div class="cover" align="center">
+				<button name="sleep" onclick="robot_sleep()">Sleep</button>
 				<hr><h2>Camera</h2>
 				<canvas id="canvas_img" width="320" height="240"></canvas>
 			</div>
@@ -192,6 +193,9 @@
 					wsWrite('U');
 				else if (event == "stop")
 					wsWrite('P');
+			}
+			function robot_sleep() {
+				wsWrite('W');
 			}
 		</script>
 	</body>
