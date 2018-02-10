@@ -79,6 +79,10 @@ void access_point_init(void)
 
 #else
 #define SIMPLE_HTTP_PORT 8081
+
+static bool simple_http_task_end = false;
+static volatile bool simple_http_task_ended = false;
+
 static void simple_http_task(void *pvParameters)
 {
 	uint32_t bytes_to_read, bytes_to_send;
@@ -97,8 +101,9 @@ static void simple_http_task(void *pvParameters)
 	netconn_bind(nc, IP_ANY_TYPE, SIMPLE_HTTP_PORT);
 	netconn_listen(nc);
 
-	while (1)
+	while (!simple_http_task_end)
 	{
+		INFO("%s: wait for accept\n", __func__);
 		err_t err = netconn_accept(nc, &client);
 
 		if (err != ERR_OK)
@@ -142,10 +147,19 @@ static void simple_http_task(void *pvParameters)
 endcon:
 		netconn_delete(client);
 	}
+	simple_http_task_ended = true;
+	vTaskDelete(NULL);
 }
 
 void access_point_init(void)
 {
 	xTaskCreate(simple_http_task, "simple http task", 512, NULL, 2, NULL);
 }
+
+void access_point_destroy(void)
+{
+	simple_http_task_end = true;
+	while (!simple_http_task_ended);
+}
+
 #endif
