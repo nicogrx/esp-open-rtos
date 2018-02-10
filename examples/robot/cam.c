@@ -8,6 +8,29 @@
 #include "trace.h"
 #include "utils.h"
 
+void cam_sensor_power(bool on)
+{
+	uint8_t reg = arducam_read_reg(ARDUCHIP_GPIO);
+	if (on) {
+		arducam_write_reg(ARDUCHIP_GPIO, (reg | GPIO_LDOS_EN_MASK)
+			& ~GPIO_PWDN_MASK);
+		INFO("%s: on\n", __func__);
+	} else {
+		arducam_write_reg(ARDUCHIP_GPIO, (reg | GPIO_PWDN_MASK)
+			& ~GPIO_LDOS_EN_MASK);
+		INFO("%s: off\n", __func__);
+	}
+}
+
+void cam_sensor_stanby(bool low)
+{
+	uint8_t reg = arducam_read_reg(ARDUCHIP_GPIO);
+	if (low)
+		arducam_write_reg(ARDUCHIP_GPIO, reg | GPIO_PWDN_MASK);
+	else
+		arducam_write_reg(ARDUCHIP_GPIO, reg & ~GPIO_PWDN_MASK);
+}
+
 bool cam_setup(uint8_t spi_bus, uint8_t spi_cs, uint8_t i2c_bus)
 {
 	uint8_t vid, pid, temp;
@@ -36,6 +59,7 @@ bool cam_setup(uint8_t spi_bus, uint8_t spi_cs, uint8_t i2c_bus)
 	INFO("%s exposure delay...", __func__);
 	delay_ms(1000); /* time required for autoexposure */
 	INFO(" done\n");
+
 	return true;
 }
 
