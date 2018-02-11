@@ -171,12 +171,12 @@ static void robot_go_timed(int ev, TimerHandle_t on_mc_step_timer, bool timed, T
 	}
 	switch(ev) {
 	case MC_FORWARD:
-		l293d_dc_motor_rotate(&mc_dev, L293D_M1, L293D_CLOCKWISE);
-		l293d_dc_motor_rotate(&mc_dev, L293D_M2, L293D_CLOCKWISE);
-		break;
-	case MC_BACKWARD:
 		l293d_dc_motor_rotate(&mc_dev, L293D_M1, L293D_ANTI_CLOCKWISE);
 		l293d_dc_motor_rotate(&mc_dev, L293D_M2, L293D_ANTI_CLOCKWISE);
+		break;
+	case MC_BACKWARD:
+		l293d_dc_motor_rotate(&mc_dev, L293D_M1, L293D_CLOCKWISE);
+		l293d_dc_motor_rotate(&mc_dev, L293D_M2, L293D_CLOCKWISE);
 		break;
 	case MC_LEFT:
 		l293d_dc_motor_rotate(&mc_dev, L293D_M1, L293D_CLOCKWISE);
