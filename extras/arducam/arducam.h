@@ -169,6 +169,7 @@ struct CAM {
 #define ARDUCHIP_GPIO			0x06  //GPIO Write Register
 #define GPIO_RESET_MASK			0x01  //0 = default state,		1 =  Sensor reset IO value
 #define GPIO_PWDN_MASK			0x02  //0 = Sensor power down IO value, 1 = Sensor power enable IO value
+#define GPIO_LDOS_EN_MASK		0x4
 
 #define BURST_FIFO_READ			0x3C  //Burst FIFO read operation
 
