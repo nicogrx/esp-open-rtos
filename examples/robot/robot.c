@@ -44,7 +44,7 @@
 #define I2C_SCL_PIN		D1
 #define I2C_SDA_PIN		D2
 #define US_TRIGGER_PIN	D3
-#define LEDS_PIN		D4
+#define NEOPIXELS_PIN	D4
 #define US_ECHO2_PIN	D8
 #define US_TRIGGER2_PIN	D10
 
@@ -56,6 +56,7 @@
 #define M2_A_PIN		4
 #define M2_B_PIN		5
 #define PIR_PIN			6
+#define LEDS_PIN		7
 
 #define US_MAX_DISTANCE_CM 500 // 5m max
 
@@ -313,7 +314,9 @@ static void robot_main_task(void *pvParameters)
 		INFO("%s: failed to init SPI\n", __func__);
 		goto end;
 	}
-	leds_init(24, LEDS_PIN);
+#ifdef NEOPIXELS
+	leds_init(24, NEOPIXELS_PIN);
+#endif
 
 #ifdef PIR
 	pir_init(PIR_PIN);
@@ -334,9 +337,10 @@ static void robot_main_task(void *pvParameters)
 	if (on_pir_timer == NULL)
 		goto end;
 #endif
-
+#ifdef NEOPIXELS
 	/* ugly way to make sure all rbg leds are off */
 	leds_dimm();
+#endif
 
 	while(!robot_main_task_end) {
 		if (websocket_wait_for_event(wbs_ev)) {
@@ -345,16 +349,28 @@ static void robot_main_task(void *pvParameters)
 				robot_sleep(60000000);
 				break;
 			case WBS_LEDS_ON:
+#ifdef NEOPIXELS
 				leds_turn_on((uint32_t)wbs_ev[1]);
+#else
+				pcf8574_gpio_write(&pcf8574_dev, 7, false);
+#endif
 				break;
 			case WBS_LEDS_OFF:
+#ifdef NEOPIXELS
 				leds_turn_off();
+#else
+				pcf8574_gpio_write(&pcf8574_dev, 7, true);
+#endif
 				break;
 			case WBS_LEDS_SCROLL:
+#ifdef NEOPIXELS
 				leds_scroll((uint32_t)wbs_ev[1]);
+#endif
 				break;
 			case WBS_LEDS_DIMM:
+#ifdef NEOPIXELS
 				leds_dimm();
+#endif
 				break;
 			case WBS_MC_FORWARD:
 				mc_ev = MC_FORWARD;
@@ -394,8 +410,6 @@ static void robot_main_task(void *pvParameters)
 				if (xTimerStart(on_pir_timer, 0) == pdPASS) {
 					pir_pending = true;
 					INFO("%s: pir event at %i\n", __func__, pir_ev);
-					/*if (!leds_is_on())
-					  leds_dimm();*/
 				} else {
 					INFO("%s: failed to start timer\n", __func__);
 				}
