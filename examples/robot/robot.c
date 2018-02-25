@@ -40,10 +40,10 @@
 #define SPI_CS  D9
 
 /* esp pins */
-#define US_ECHO_PIN		D0
-#define I2C_SCL_PIN		D1
-#define I2C_SDA_PIN		D2
-#define US_TRIGGER_PIN	D3
+#define US_ECHO_PIN		D1
+#define US_TRIGGER_PIN	D2
+#define I2C_SCL_PIN		D3
+#define I2C_SDA_PIN		D4
 #define NEOPIXELS_PIN	D4
 #define US_ECHO2_PIN	D8
 #define US_TRIGGER2_PIN	D10
