@@ -20,13 +20,13 @@
 			<div class="cover" align="center">
 				<hr><h2>Motor Control</h2>
 				<div class="wrapper">
-					<div class="box forward"><button name="forward" onclick="motor_ctrl('forward')">Forward</button></div>
-					<div class="box turn_left"><button name="turn_left" onclick="motor_ctrl('turn_left')">Turn Left</button></div>
+					<div class="box forward"><button name="forward" onmousedown="motor_ctrl('forward')" onmouseup="motor_ctrl('stop')">Forward</button></div>
+					<div class="box turn_left"><button name="turn_left" onmousedown="motor_ctrl('turn_left')" onmouseup="motor_ctrl('stop')" >Turn Left</button></div>
 					<div class="box step_left"><button name="step_left" onclick="motor_ctrl('step_left')">Step Left</button></div>
 					<div class="box stop"><button name="stop" onclick="motor_ctrl('stop')">Stop</button></div>
 					<div class="box step_right"><button name="step_right" onclick="motor_ctrl('step_right')">Step Right</button></div>
-					<div class="box turn_right"><button name="turn_right" onclick="motor_ctrl('turn_right')">Turn Right</button></div>
-					<div class="box backward"><button name="backward" onclick="motor_ctrl('backward')">Backward</button></div>
+					<div class="box turn_right"><button name="turn_right" onmousedown="motor_ctrl('turn_right')" onmouseup="motor_ctrl('stop')">Turn Right</button></div>
+					<div class="box backward"><button name="backward" onmousedown="motor_ctrl('backward')" onmouseup="motor_ctrl('stop')")">Backward</button></div>
 				</div>
 			</div>
 			<div class="cover" align="center">

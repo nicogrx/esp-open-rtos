@@ -98,7 +98,7 @@ ul.navbar li a.active {
 	grid-template-columns: 120px 120px 120px 120px 120px;
 	grid-template-areas:
 			". . forward . ."
-			"turn_left step_left stop step_right turn_right"
+			"step_left turn_left stop turn_right step_right"
 			". . backward . .";
 	background-color: #fff;
 	color: #444;

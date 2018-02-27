@@ -246,13 +246,13 @@ static void robot_motorctrl_task(void *pvParameters) {
 				robot_go_timed(MC_FORWARD, NULL, false, 0);
 			break;
 		case MC_BACKWARD:
-			robot_go_timed(MC_BACKWARD, on_mc_step_timer, true, 10);
+			robot_go_timed(MC_BACKWARD, on_mc_step_timer, false, 0);
 			break;
 		case MC_STEP_LEFT:
 			robot_go_timed(MC_LEFT, on_mc_step_timer, true, 10);
 			break;
 		case MC_TURN_LEFT:
-			robot_go_timed(MC_LEFT, on_mc_step_timer, true, 80);
+			robot_go_timed(MC_LEFT, on_mc_step_timer, false, 0);
 			break;
 		case MC_LEFT:
 			robot_go_timed(MC_LEFT, NULL, false, 0);
@@ -261,7 +261,7 @@ static void robot_motorctrl_task(void *pvParameters) {
 			robot_go_timed(MC_RIGHT, on_mc_step_timer, true, 10);
 			break;
 		case MC_TURN_RIGHT:
-			robot_go_timed(MC_RIGHT, on_mc_step_timer, true, 80);
+			robot_go_timed(MC_RIGHT, on_mc_step_timer, false, 0);
 			break;
 		case MC_RIGHT:
 			robot_go_timed(MC_RIGHT, NULL, false, 0);
