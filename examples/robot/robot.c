@@ -73,6 +73,7 @@ enum MC_EVENTS {
 	MC_NO_EV,
 };
 
+static bool light_on = false;
 static bool robot_main_task_end = false;
 static bool robot_motorctrl_task_end = false;
 static volatile bool robot_motorctrl_task_ended = false;
@@ -363,14 +364,16 @@ static void robot_main_task(void *pvParameters)
 #ifdef NEOPIXELS
 				leds_turn_on((uint32_t)wbs_ev[1]);
 #else
-				pcf8574_gpio_write(&pcf8574_dev, 7, false);
+				pcf8574_gpio_write(&pcf8574_dev, LEDS_PIN, false);
+				light_on = true;
 #endif
 				break;
 			case WBS_LEDS_OFF:
 #ifdef NEOPIXELS
 				leds_turn_off();
 #else
-				pcf8574_gpio_write(&pcf8574_dev, 7, true);
+				pcf8574_gpio_write(&pcf8574_dev, LEDS_PIN, true);
+				light_on = false;
 #endif
 				break;
 			case WBS_LEDS_SCROLL:
@@ -435,7 +438,11 @@ end:
 
 bool robot_get_leds_status(void)
 {
+#ifdef NEOPIWELS
 	return leds_is_on();
+#else
+	return light_on;
+#endif
 }
 
 void robot_get_us_distance(int32_t *left, uint32_t *right)
