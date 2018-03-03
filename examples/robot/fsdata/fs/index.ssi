@@ -13,24 +13,44 @@
 			<h1 align="center">My little robot</h1>
 			<div id="status_box" class="alert alert-info">Loading..</div>
 			<div class="cover" align="center">
-				<button name="sleep" onclick="robot_sleep()">Sleep</button>
-				<hr><h2>Camera</h2>
-				<canvas id="canvas_img" width="320" height="240"></canvas>
+				<table class="table table-striped">
+					<tr>
+						<td>
+							<div class="wrapper">
+								<div class="box forward">
+									<input type="image" src="img/up.png" onmousedown="motor_ctrl('forward')" onmouseup="motor_ctrl('stop')"/>
+								</div>
+								<div class="box turn_left">
+									<input type="image" src="img/left.png" onmousedown="motor_ctrl('turn_left')" onmouseup="motor_ctrl('stop')"/>
+								</div>
+								<div class="box step_left">
+									<input type="image" src="img/left.png" onclick="motor_ctrl('step_left')"/>
+								</div>
+								<div class="box stop">
+									<input type="image" src="img/stop.png" onclick="motor_ctrl('stop')"/>
+								</div>
+								<div class="box step_right">
+									<input type="image" src="img/right.png" onclick="motor_ctrl('step_right')"/>
+								</div>
+								<div class="box turn_right">
+									<input type="image" src="img/right.png" onmousedown="motor_ctrl('turn_right')" onmouseup="motor_ctrl('stop')"/>
+								</div>
+								<div class="box backward">
+									<input type="image" src="img/down.png" onmousedown="motor_ctrl('backward')" onmouseup="motor_ctrl('stop')")"/>
+								</div>
+								<div class="box sleep">
+									<input type="image" src="img/sleep.png" onclick="robot_sleep()"/>
+								</div>
+								<div class="box light">
+									<input type="image" src="img/light.png" onclick="light()"/>
+								</div>
+							</div>
+						</td>
+						<td><canvas id="canvas_img" width="640" height="480"></canvas></td>
+					</tr>
+				</table>
 			</div>
 			<div class="cover" align="center">
-				<hr><h2>Motor Control</h2>
-				<div class="wrapper">
-					<div class="box forward"><button name="forward" onmousedown="motor_ctrl('forward')" onmouseup="motor_ctrl('stop')">Forward</button></div>
-					<div class="box turn_left"><button name="turn_left" onmousedown="motor_ctrl('turn_left')" onmouseup="motor_ctrl('stop')" >Turn Left</button></div>
-					<div class="box step_left"><button name="step_left" onclick="motor_ctrl('step_left')">Step Left</button></div>
-					<div class="box stop"><button name="stop" onclick="motor_ctrl('stop')">Stop</button></div>
-					<div class="box step_right"><button name="step_right" onclick="motor_ctrl('step_right')">Step Right</button></div>
-					<div class="box turn_right"><button name="turn_right" onmousedown="motor_ctrl('turn_right')" onmouseup="motor_ctrl('stop')">Turn Right</button></div>
-					<div class="box backward"><button name="backward" onmousedown="motor_ctrl('backward')" onmouseup="motor_ctrl('stop')")">Backward</button></div>
-				</div>
-			</div>
-			<div class="cover" align="center">
-				<hr><h2>Status</h2>
 				<table class="table table-striped">
 					<tr>
 						<td><b>Distance from obstacle:</b></td>
@@ -83,6 +103,7 @@
 			var retries;
 			var series = new TimeSeries();
 			var img;
+			var light_on = "false";
 			window.onload = function() {
 				wsOpen();
 				img = new Image();
@@ -177,6 +198,15 @@
 						wsWrite('E' + rgb_color.toString());
 				} else
 					wsWrite('D');
+			}
+			function light() {
+				if (light_on == "false") {
+					wsWrite('E' + "0");
+					light_on = "true";
+				} else {
+					wsWrite('D');
+					light_on = "false";
+				}
 			}
 			function motor_ctrl(event) {
 				if (event == "forward")
