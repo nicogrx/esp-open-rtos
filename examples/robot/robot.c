@@ -294,6 +294,7 @@ static void robot_sleep(uint32_t time_in_us)
 	robot_motorctrl_task_end = true;
 	while (!robot_motorctrl_task_ended);
 	l293d_dc_motors_stop(&mc_dev);
+	cam_sensor_stanby(true);
 	sdk_system_deep_sleep(time_in_us);
 }
 
@@ -305,6 +306,7 @@ static void robot_main_task(void *pvParameters)
 #endif
 	int mc_ev;
 	int wbs_ev[2];
+	int retry = 0;
 
 	sdk_system_update_cpu_freq(160);
 
@@ -327,8 +329,17 @@ static void robot_main_task(void *pvParameters)
 		INFO ("%s: failed to init httpd\n", __func__);
 		goto end;
 	}
-	if (!cam_setup(SPI_BUS, SPI_CS, I2C_BUS))
-		goto end;
+
+	cam_sensor_stanby(true);
+	delay_ms(200);
+	cam_sensor_stanby(false);
+	while (!cam_setup(SPI_BUS, SPI_CS, I2C_BUS)) {
+		cam_sensor_stanby(true);
+		delay_ms(200);
+		cam_sensor_stanby(false);
+		if (retry++ > 5)
+			break;
+	}
 	access_point_init();
 
 #ifdef PIR
