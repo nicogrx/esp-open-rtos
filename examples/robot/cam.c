@@ -55,7 +55,7 @@ bool cam_setup(uint8_t spi_bus, uint8_t spi_cs, uint8_t i2c_bus)
 	}
 	arducam_set_format(fmtJPEG);
 	arducam_init();
-	arducam_set_jpeg_size(sz320x240);
+	arducam_set_jpeg_size(sz640x480);
 	INFO("%s exposure delay...", __func__);
 	delay_ms(1000); /* time required for autoexposure */
 	INFO(" done\n");
