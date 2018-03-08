@@ -72,7 +72,7 @@ endcon:
 	}
 }
 
-void access_point_init(void)
+void server_init(void)
 {
 	xTaskCreate(telnet_task, "telnet task", 512, NULL, 2, NULL);
 }
@@ -151,12 +151,12 @@ endcon:
 	vTaskDelete(NULL);
 }
 
-void access_point_init(void)
+void server_init(void)
 {
 	xTaskCreate(simple_http_task, "simple http task", 512, NULL, 2, NULL);
 }
 
-void access_point_destroy(void)
+void server_destroy(void)
 {
 	simple_http_task_end = true;
 	while (!simple_http_task_ended);

@@ -21,7 +21,7 @@
 #include "pcf8574/pcf8574.h"
 #include "ultrasonic/ultrasonic.h"
 
-#include "access_point.h"
+#include "server.h"
 #include "cam.h"
 #include "leds.h"
 #include "pir.h"
@@ -291,7 +291,7 @@ static void pir_timer_cb(TimerHandle_t xTimer)
 
 static void robot_sleep(uint32_t time_in_us)
 {
-	access_point_destroy();
+	server_destroy();
 	robot_motorctrl_task_end = true;
 	while (!robot_motorctrl_task_ended);
 	l293d_dc_motors_stop(&mc_dev);
@@ -341,7 +341,7 @@ static void robot_main_task(void *pvParameters)
 		if (retry++ > 5)
 			break;
 	}
-	access_point_init();
+	server_init();
 
 #ifdef PIR
 	on_pir_timer = xTimerCreate("on pir timer", 10000/portTICK_PERIOD_MS,
