@@ -10,7 +10,6 @@
 #include <stdio.h>
 #include <FreeRTOS.h>
 #include <task.h>
-#include <ssid_config.h>
 #include <httpd/httpd.h>
 #include "queue.h"
 #include "http_server.h"
@@ -182,19 +181,9 @@ static void httpd_task(void *pvParameters)
 
 int http_server_init(void)
 {
-    struct sdk_station_config config = {
-        .ssid = WIFI_SSID,
-        .password = WIFI_PASS,
-    };
-
 	wbs_queue = xQueueCreate(10, sizeof(int) * 2);
 	if (!wbs_queue)
 		return -1;
-
-    /* required to call wifi_set_opmode before station_set_config */
-    sdk_wifi_set_opmode(STATION_MODE);
-    sdk_wifi_station_set_config(&config);
-    sdk_wifi_station_connect();
 
     /* initialize tasks */
     xTaskCreate(&httpd_task, "HTTP Daemon", 256, NULL, 2, NULL);

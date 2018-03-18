@@ -17,6 +17,7 @@
 #include <esp/spi.h>
 #include "esp/uart.h"
 #include "espressif/esp_common.h"
+#include <ssid_config.h>
 #include "l293d/l293d.h"
 #include "pcf8574/pcf8574.h"
 #include "ultrasonic/ultrasonic.h"
@@ -453,6 +454,16 @@ void robot_get_us_distance(int32_t *left, uint32_t *right)
 
 void user_init(void)
 {
+	struct sdk_station_config config = {
+		.ssid = WIFI_SSID,
+		.password = WIFI_PASS,
+	};
+
+	/* required to call wifi_set_opmode before station_set_config */
+	sdk_wifi_set_opmode(STATION_MODE);
+	sdk_wifi_station_set_config(&config);
+	sdk_wifi_station_connect();
+
 	xTaskCreate(&robot_main_task, "robot mngt", 256, NULL, 2, NULL);
 }
 
