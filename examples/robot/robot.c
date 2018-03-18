@@ -33,6 +33,8 @@
 #define DEBUG
 #include "trace.h"
 
+#define SLEEP_TIME (60 * 1000000)
+
 #define US1
 #define US2
 
@@ -359,7 +361,8 @@ static void robot_main_task(void *pvParameters)
 		if (websocket_wait_for_event(wbs_ev)) {
 			switch(wbs_ev[0]) {
 			case WBS_POWER_DOWN:
-				robot_sleep(60000000);
+				robot_sleep(SLEEP_TIME);
+				goto end;
 				break;
 			case WBS_LEDS_ON:
 #ifdef NEOPIXELS
