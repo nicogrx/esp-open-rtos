@@ -13,7 +13,8 @@ EXTRA_COMPONENTS=extras/mbedtls \
 				 extras/l293d \
 				 extras/pcf8574 \
 				 extras/i2c \
-				 extras/arducam
+				 extras/arducam \
+				 extras/jsmn
 
 include ../../common.mk
 
