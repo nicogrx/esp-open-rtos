@@ -6,6 +6,7 @@
  */
 #include <stdio.h>
 #include <stdint.h>
+#include <string.h>
 
 #include "FreeRTOS.h"
 #include "queue.h"
@@ -21,6 +22,7 @@
 #include "l293d/l293d.h"
 #include "pcf8574/pcf8574.h"
 #include "ultrasonic/ultrasonic.h"
+#include "jsmn.h"
 
 #include "server.h"
 #include "cam.h"
@@ -28,12 +30,11 @@
 #include "pir.h"
 #include "nodemcu.h"
 #include "utils.h"
+#include "http_client.h"
 #include "http_server.h"
 
 #define DEBUG
 #include "trace.h"
-
-#define SLEEP_TIME (60 * 1000000)
 
 #define US1
 #define US2
@@ -292,14 +293,98 @@ static void pir_timer_cb(TimerHandle_t xTimer)
 }
 #endif
 
-static void robot_sleep(uint32_t time_in_us)
+static void robot_sleep(uint32_t time_in_s, bool early)
 {
-	server_destroy();
-	robot_motorctrl_task_end = true;
-	while (!robot_motorctrl_task_ended);
-	l293d_dc_motors_stop(&mc_dev);
+	INFO("Go zzz for %d seconds ...\n", time_in_s);
+	if (!early) {
+		server_destroy();
+		robot_motorctrl_task_end = true;
+		while (!robot_motorctrl_task_ended);
+		l293d_dc_motors_stop(&mc_dev);
+	}
 	cam_sensor_stanby(true);
-	sdk_system_deep_sleep(time_in_us);
+	sdk_system_deep_sleep(time_in_s * 1000000);
+}
+
+static const char *json_sleep_req = "/json.htm?type=command&param=getuservariable&idx=7";
+#define NB_TOKENS 64
+#define STRING_SIZE 32
+
+static int jsoneq(const char *json, jsmntok_t *tok, const char *s) {
+	if (tok->type == JSMN_STRING && (int) strlen(s) == tok->end - tok->start &&
+			strncmp(json + tok->start, s, tok->end - tok->start) == 0) {
+		return 0;
+	}
+	return -1;
+}
+
+static int robot_check_sleep(void)
+{
+	int i, r, len, val = 0;
+	jsmn_parser p;
+	char * http_resp;
+	char *json_resp;
+	jsmntok_t *t;
+	char string_val[STRING_SIZE];
+
+	http_resp = (char *)malloc(MAX_OUT_CHARS);
+	if (!http_resp)
+		return val;
+	json_resp = http_resp;
+
+	t = (jsmntok_t *)malloc(NB_TOKENS);
+	if (!t) {
+		free(http_resp);
+		return val;
+	}
+
+	if (http_get("192.168.1.6", "8080", json_sleep_req, http_resp)) {
+		goto end;
+	}
+
+	len = strlen(http_resp);
+	for (i = 0; i < len ; i++) {
+		if (http_resp[i] == '{') {
+			json_resp = http_resp + i;
+			break;
+		}
+	}
+
+	if (*json_resp != '{') {
+		INFO("failed to find a bracket\n");
+		goto end;
+	}
+
+	jsmn_init(&p);
+	r = jsmn_parse(&p, json_resp, strlen(json_resp), t, NB_TOKENS);
+	if (r < 0) {
+		INFO("Failed to parse JSON: %d\n", r);
+		goto end;
+	}
+
+	/* Assume the top-level element is an object */
+	if (r < 1 || t[0].type != JSMN_OBJECT) {
+		INFO("Object expected\n");
+		goto end;
+	}
+
+	for (i = 1; i < r; i++)
+		if (jsoneq(json_resp, &t[i], "Value") == 0) {
+			len = t[i + 1].end - t[i + 1].start;
+			if (len > STRING_SIZE - 1) {
+				INFO("len is too big: %d\n", len);
+				goto end;
+			}
+			memcpy(string_val, json_resp + t[i + 1].start, len);
+			string_val[len] = '\0';
+
+			val = atoi(string_val);
+			goto end;
+		}
+end:
+	free(http_resp);
+	free(t);
+	return val;
 }
 
 static void robot_main_task(void *pvParameters)
@@ -311,10 +396,19 @@ static void robot_main_task(void *pvParameters)
 	int mc_ev;
 	int wbs_ev[2];
 	int retry = 0;
+	int sleep_val;
 
 	sdk_system_update_cpu_freq(160);
 
 	uart_set_baud(0, 115200);
+
+	delay_ms(5000);
+	sleep_val = robot_check_sleep();
+	if (sleep_val) {
+		robot_sleep(sleep_val, true);
+		goto end;
+	}
+
 	i2c_init(I2C_BUS, I2C_SCL_PIN, I2C_SDA_PIN, I2C_FREQ_100K);
 	if (!spi_set_settings(SPI_BUS, &spi_config)) {
 		INFO("%s: failed to init SPI\n", __func__);
@@ -361,8 +455,11 @@ static void robot_main_task(void *pvParameters)
 		if (websocket_wait_for_event(wbs_ev)) {
 			switch(wbs_ev[0]) {
 			case WBS_POWER_DOWN:
-				robot_sleep(SLEEP_TIME);
-				goto end;
+				sleep_val = robot_check_sleep();
+				if (sleep_val) {
+					robot_sleep(sleep_val, false);
+					goto end;
+				}
 				break;
 			case WBS_LEDS_ON:
 #ifdef NEOPIXELS
@@ -467,7 +564,7 @@ void user_init(void)
 	sdk_wifi_station_set_config(&config);
 	sdk_wifi_station_connect();
 
-	xTaskCreate(&robot_main_task, "robot mngt", 256, NULL, 2, NULL);
+	xTaskCreate(&robot_main_task, "robot mngt", 512, NULL, 2, NULL);
 }
 
 
