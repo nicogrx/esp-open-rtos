@@ -80,7 +80,7 @@ int http_get(const char *server, const char *port, const char *in, char *out)
 		bzero(out, MAX_OUT_CHARS);
 		out_p = out;
         do {
-            r = read(s, out_p, MAX_OUT_CHARS - 1);
+			r = read(s, out_p, (out + MAX_OUT_CHARS) - out_p - 1);
 			out_p += r;
 			if (out_p >= (out + (MAX_OUT_CHARS - 2)))
 				break;
