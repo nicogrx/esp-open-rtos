@@ -297,6 +297,7 @@ static void robot_sleep(uint32_t time_in_s, bool early)
 {
 	INFO("Go zzz for %d seconds ...\n", time_in_s);
 	if (!early) {
+		pcf8574_gpio_write(&pcf8574_dev, LEDS_PIN, true);
 		server_destroy();
 		robot_motorctrl_task_end = true;
 		while (!robot_motorctrl_task_ended);
