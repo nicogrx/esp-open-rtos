@@ -24,6 +24,7 @@
 #include "nodemcu.h"
 #include "utils.h"
 #include "json_parser.h"
+#include "sensor_bmp280.h"
 
 #define DEBUG
 #include "trace.h"
@@ -58,6 +59,13 @@ static struct i2c_dev bmp280_i2c = {
 };
 
 static struct sensor sensors[] = {
+	{
+		.period = 60,
+		.init = sensor_bmp280_init,
+		.refresh = sensor_bmp280_refresh,
+		.destroy = NULL,
+		.private = (void *)&bmp280_i2c,
+	},
 	{
 		.period = 0, /* dummy sensor marking end of list */
 	},
