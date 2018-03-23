@@ -40,8 +40,69 @@
 static const char *json_req = "/json.htm?type=command&param=getuservariable&idx=7";
 static bool sensor_ctrl_main_task_end = false;
 char http_resp[MAX_OUT_CHARS];
+char sensor_data[MAX_OUT_CHARS];
 #define STRING_SIZE 32
 char string_val[STRING_SIZE];
+
+struct sensor {
+	int period; /* in seconds */
+	int timeout_ticks;
+	int (*init)(void *private);
+	int (*refresh)(char *data);
+	void (*destroy)(void);
+	void *private;
+};
+
+static struct i2c_dev bmp280_i2c = {
+	.bus = I2C_BUS,
+};
+
+static struct sensor sensors[] = {
+	{
+		.period = 0, /* dummy sensor marking end of list */
+	},
+};
+
+static inline void sensor_reload(struct sensor *s, int ticks)
+{
+	s->timeout_ticks = ticks + (s->period * 1000) / portTICK_PERIOD_MS;
+}
+
+void sensors_init(struct sensor *sensors)
+{
+	struct sensor *s = sensors;
+	int ticks = xTaskGetTickCount();
+
+	while(s->period != 0) {
+		s->init(s->private);
+		sensor_reload(s, ticks);
+		s++;
+	}
+}
+
+void sensors_destroy(struct sensor *sensors)
+{
+	struct sensor *s = sensors;
+
+	while(s->period != 0) {
+		s->destroy();
+		s++;
+	}
+}
+
+void sensors_refresh(struct sensor *sensors)
+{
+	struct sensor *s = sensors;
+	int ticks = xTaskGetTickCount();
+
+	while(s->period != 0) {
+		if (ticks >= s->timeout_ticks) {
+			s->refresh(sensor_data);
+			sensor_reload(s, ticks);
+		}
+		s++;
+	}
+}
 
 static void sensor_ctrl_main_task(void *pvParameters)
 {
@@ -53,6 +114,7 @@ static void sensor_ctrl_main_task(void *pvParameters)
 	
 	delay_ms(10000);
 	server_init();
+
 	s = client_open(SERVER, PORT);
 	if (s < 0)
 		goto end;
@@ -64,7 +126,9 @@ static void sensor_ctrl_main_task(void *pvParameters)
 	if (!json_get_value_from_key(http_resp, "Value", string_val, STRING_SIZE))
 		INFO("Value = %s\n", string_val);
 
+	sensors_init(sensors);
 	while(!sensor_ctrl_main_task_end) {
+		sensors_refresh(sensors);
 		vTaskDelay(10);
 	}
 end:
