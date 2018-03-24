@@ -22,7 +22,7 @@
 #define DEBUG
 #include "trace.h"
 
-char req[MAX_IN_CHARS];
+static char req[MAX_IN_CHARS];
 
 int client_http_get(int s, const char *in, char *out)
 {
