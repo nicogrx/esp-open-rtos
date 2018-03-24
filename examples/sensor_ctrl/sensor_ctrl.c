@@ -17,6 +17,7 @@
 #include "i2c/i2c.h"
 #include "esp/uart.h"
 #include "espressif/esp_common.h"
+#include "esp/gpio.h"
 #include <ssid_config.h>
 
 #include "server.h"
@@ -25,6 +26,7 @@
 #include "utils.h"
 #include "json_parser.h"
 #include "sensor_bmp280.h"
+#include "server.h"
 
 #define DEBUG
 #include "trace.h"
@@ -39,9 +41,11 @@
 #define PORT "8080"
 
 static const char *json_updt_dev_hdr = "/json.htm?type=command&param=udevice&idx=";
+static const char *host_cmd_hdr = "/control?cmd=";
 static bool sensor_ctrl_main_task_end = false;
 
 char http_resp[MAX_OUT_CHARS];
+char host_req[HOST_REQ_SIZE];
 
 #define STRING_SIZE 32
 char string_val[STRING_SIZE];
@@ -77,6 +81,63 @@ static struct sensor sensors[] = {
 		.period = 0, /* dummy sensor marking end of list */
 	},
 };
+
+static int gpios[] = {
+	D6,
+	D7,
+};
+
+static int sensor_ctrl_gpio_set(int num, int val)
+{
+	int *gpio = gpios;
+
+	while (*gpio != -1) {
+		if (*gpio == num) {
+			gpio_enable(num, GPIO_OUTPUT);
+			gpio_write(num, (bool)val);
+			return 0;
+		}
+		gpio++;
+	}
+	return -1;
+}
+
+static void sensor_ctrl_process_host_cmd(char * host_req)
+{
+	char *tmp;
+	char *tmp2;
+	int gpio_num;
+	int gpio_val;
+	char gpio_num_str[4];
+	char gpio_val_str[2];
+
+	int len = strlen(host_cmd_hdr);
+
+	/* /control?cmd=GPIO,12,0 */
+
+	if (strncmp(host_req, host_cmd_hdr, len)) {
+		INFO("%s: invalid header\n", __func__);
+		return;
+	}
+
+	tmp = host_req + len;
+
+	if (!strncmp(tmp, "GPIO,", 5)) {
+		tmp += 5;
+		tmp2 = strchr(tmp, ',');
+		if (tmp2) {
+			len = tmp2 + 1 - tmp;
+			snprintf(gpio_num_str, len > 3 ? 3: len, "%s", tmp);
+			gpio_num = atoi(gpio_num_str);
+			gpio_val_str[0] = *(tmp2 + 1);
+			gpio_val_str[1] = '\0';
+			gpio_val = atoi(gpio_val_str);
+			INFO("%s: GPIO %d = %d\n", __func__, gpio_num, gpio_val);
+			sensor_ctrl_gpio_set(gpio_num, gpio_val);
+		}
+	}
+
+}
 
 static inline void sensor_reload(struct sensor *s, int ticks)
 {
@@ -143,6 +204,9 @@ static void sensor_ctrl_main_task(void *pvParameters)
 	sensors_init(sensors);
 	while(!sensor_ctrl_main_task_end) {
 		sensors_refresh(sensors);
+		if (server_wait_for_event(host_req)) {
+			sensor_ctrl_process_host_cmd(host_req);
+		}
 		vTaskDelay(10);
 	}
 	vTaskDelete(NULL);
