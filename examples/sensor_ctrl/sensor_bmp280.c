@@ -28,7 +28,7 @@ int sensor_bmp280_init(void *private)
 	return 0;
 }
 
-int sensor_bmp280_refresh(char *out)
+int sensor_bmp280_refresh(char *out, int max_chars)
 {
 	bool bme280p = bmp280_dev.id == BME280_CHIP_ID;
 	float pressure, temperature, humidity;
@@ -40,5 +40,10 @@ int sensor_bmp280_refresh(char *out)
 	INFO("Pressure: %.2f Pa, Temperature: %.2f C", pressure, temperature);
 	if (bme280p)
 		INFO(", Humidity: %.2f\n", humidity);
+
+	if (bme280p)
+		snprintf(out, max_chars, "%.2f;%.2f;0;%.2f;0", temperature, humidity, pressure);
+	else
+		snprintf(out, max_chars, "%.2f;%.2f;0;%.2f;0", temperature, humidity, pressure);
 	return 0;
 }

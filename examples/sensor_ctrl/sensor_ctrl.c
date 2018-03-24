@@ -38,18 +38,24 @@
 #define SERVER "192.168.1.6"
 #define PORT "8080"
 
-static const char *json_req = "/json.htm?type=command&param=getuservariable&idx=7";
+static const char *json_updt_dev_hdr = "/json.htm?type=command&param=udevice&idx=";
 static bool sensor_ctrl_main_task_end = false;
+
 char http_resp[MAX_OUT_CHARS];
-char sensor_data[MAX_OUT_CHARS];
+
 #define STRING_SIZE 32
 char string_val[STRING_SIZE];
+#define SENSOR_DATA_SIZE 80
+char sensor_data[SENSOR_DATA_SIZE];
+#define JSON_REQ_SIZE 128
+char json_req[JSON_REQ_SIZE];
 
 struct sensor {
+	int idx; /* index in domoticz */
 	int period; /* in seconds */
 	int timeout_ticks;
 	int (*init)(void *private);
-	int (*refresh)(char *data);
+	int (*refresh)(char *data, int max_chars);
 	void (*destroy)(void);
 	void *private;
 };
@@ -60,7 +66,8 @@ static struct i2c_dev bmp280_i2c = {
 
 static struct sensor sensors[] = {
 	{
-		.period = 60,
+		.idx = 210,
+		.period = 10,
 		.init = sensor_bmp280_init,
 		.refresh = sensor_bmp280_refresh,
 		.destroy = NULL,
@@ -102,20 +109,30 @@ void sensors_refresh(struct sensor *sensors)
 {
 	struct sensor *s = sensors;
 	int ticks = xTaskGetTickCount();
+	int sock = -1;
 
 	while(s->period != 0) {
 		if (ticks >= s->timeout_ticks) {
-			s->refresh(sensor_data);
+			if (sock == -1) {
+				sock = client_open(SERVER, PORT);
+				if (sock < 0) {
+					return;
+				}
+			}
+			s->refresh(sensor_data, SENSOR_DATA_SIZE);
+			snprintf(json_req, JSON_REQ_SIZE, "%s%d&nvalue=0&svalue=%s", json_updt_dev_hdr,
+					s->idx, sensor_data);
+			client_http_get(sock, json_req, http_resp);
 			sensor_reload(s, ticks);
 		}
 		s++;
 	}
+	if (sock != - 1)
+		client_close(sock);
 }
 
 static void sensor_ctrl_main_task(void *pvParameters)
 {
-	int s;
-
 	sdk_system_update_cpu_freq(160);
 	uart_set_baud(0, 115200);
 	i2c_init(I2C_BUS, I2C_SCL_PIN, I2C_SDA_PIN, I2C_FREQ_100K);
@@ -123,23 +140,11 @@ static void sensor_ctrl_main_task(void *pvParameters)
 	delay_ms(10000);
 	server_init();
 
-	s = client_open(SERVER, PORT);
-	if (s < 0)
-		goto end;
-	if(client_http_get(s, json_req, http_resp)) {
-		client_close(s);
-		goto end;
-	}
-	client_close(s);
-	if (!json_get_value_from_key(http_resp, "Value", string_val, STRING_SIZE))
-		INFO("Value = %s\n", string_val);
-
 	sensors_init(sensors);
 	while(!sensor_ctrl_main_task_end) {
 		sensors_refresh(sensors);
 		vTaskDelay(10);
 	}
-end:
 	vTaskDelete(NULL);
 }
 
