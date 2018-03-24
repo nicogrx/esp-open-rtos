@@ -19,7 +19,7 @@
 #include "client.h"
 #include "utils.h"
 
-#define DEBUG
+//#define DEBUG
 #include "trace.h"
 
 static char req[MAX_IN_CHARS];
