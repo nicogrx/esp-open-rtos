@@ -27,7 +27,7 @@ static void ser2net_task(void *pvParameters)
 	struct netconn *client = NULL;
 	struct netconn *nc;
 	err_t err;
-	int i, c;
+	int c, i;
 
 	nc = netconn_new(NETCONN_TCP);
 	if (!nc)
@@ -47,8 +47,8 @@ static void ser2net_task(void *pvParameters)
 		err = netconn_peer(client, &client_addr, &port_ignore);
 		if (err != ERR_OK)
 			goto endcon;
+		i = 0;
 		while (!ser2net_end) {
-			i = 0;
 			c = uart_getc_nowait(serial_port);
 			if (c != -1) {
 				buf[i++] = (uint8_t)c;
