@@ -201,6 +201,7 @@ static void sensor_ctrl_main_task(void *pvParameters)
 	
 	delay_ms(10000);
 	server_init();
+	gpio_set_iomux_function(D9, IOMUX_GPIO3_FUNC_UART0_RXD);
 	ser2net_init(0, 1200, UART_BYTELENGTH_7, UART_STOPBITS_1, true,
 				 UART_PARITY_EVEN);
 
