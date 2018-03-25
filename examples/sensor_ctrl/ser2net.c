@@ -73,8 +73,7 @@ endcon:
 void ser2net_init(int port, int baudrate, UART_ByteLength bl, UART_StopBits sb,
 				  bool parity_en, UART_Parity p)
 {
-    setbuf(stdout, NULL);
-
+	/*setbuf(stdout, NULL);*/
 	uart_set_baud(port, baudrate);
 	uart_set_byte_length(port, bl);
 	uart_set_stopbits(port, sb);
