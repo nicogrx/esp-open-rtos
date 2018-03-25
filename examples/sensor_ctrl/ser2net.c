@@ -8,7 +8,7 @@
 
 #include "ser2net.h"
 
-#define DEBUG
+//#define DEBUG
 #include "trace.h"
 
 #define BUFSIZE 32

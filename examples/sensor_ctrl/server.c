@@ -9,7 +9,7 @@
 
 #include "server.h"
 
-#define DEBUG
+//#define DEBUG
 #include "trace.h"
 
 static QueueHandle_t host_req_queue;

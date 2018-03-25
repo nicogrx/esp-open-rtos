@@ -29,7 +29,7 @@
 #include "server.h"
 #include "ser2net.h"
 
-#define DEBUG
+//#define DEBUG
 #include "trace.h"
 
 #define I2C_BUS 0

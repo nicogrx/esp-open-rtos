@@ -6,7 +6,7 @@
 #include "i2c/i2c.h"
 #include "bmp280/bmp280.h"
 
-#define DEBUG
+//#define DEBUG
 #include "trace.h"
 
 static bmp280_t bmp280_dev;

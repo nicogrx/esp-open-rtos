@@ -10,7 +10,7 @@
 
 #include "jsmn.h"
 
-#define DEBUG
+//#define DEBUG
 #include "trace.h"
 
 #define NB_TOKENS 64
