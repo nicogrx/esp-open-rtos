@@ -201,7 +201,8 @@ static void sensor_ctrl_main_task(void *pvParameters)
 	
 	delay_ms(10000);
 	server_init();
-	ser2net_init(0, 1200, UART_STOPBITS_1, true, UART_PARITY_EVEN);
+	ser2net_init(0, 1200, UART_BYTELENGTH_7, UART_STOPBITS_1, true,
+				 UART_PARITY_EVEN);
 
 	sensors_init(sensors);
 	while(!sensor_ctrl_main_task_end) {

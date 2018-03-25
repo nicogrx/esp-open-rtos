@@ -70,12 +70,13 @@ endcon:
 	vTaskDelete(NULL);
 }
 
-void ser2net_init(int port, int baudrate, UART_StopBits sb,
+void ser2net_init(int port, int baudrate, UART_ByteLength bl, UART_StopBits sb,
 				  bool parity_en, UART_Parity p)
 {
     setbuf(stdout, NULL);
 
 	uart_set_baud(port, baudrate);
+	uart_set_byte_length(port, bl);
 	uart_set_stopbits(port, sb);
 	uart_set_parity_enabled(port, parity_en);
 	if (parity_en)
