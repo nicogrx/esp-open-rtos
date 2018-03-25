@@ -90,7 +90,7 @@ static void server_task(void *pvParameters)
 		server_parse_data(data);
 		netbuf_delete(nb);
 
-		sprintf(buf, "HTTP/1.1 200 OK\nContent-Type: image/jpeg; charset=utf-8\nConnection: close\n\n");
+		sprintf(buf, "HTTP/1.1 200 OK\nContent-Length: 0\nContent-Type: text/html; charset=utf-8\nConnection: close\n\n");
 		netconn_write(client, (uint8_t *)buf, strlen(buf), NETCONN_COPY);
 endcon:
 		netconn_delete(client);
