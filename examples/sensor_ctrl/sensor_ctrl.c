@@ -72,7 +72,7 @@ static struct i2c_dev bmp280_i2c = {
 static struct sensor sensors[] = {
 	{
 		.idx = 210,
-		.period = 10,
+		.period = 60,
 		.init = sensor_bmp280_init,
 		.refresh = sensor_bmp280_refresh,
 		.destroy = NULL,
