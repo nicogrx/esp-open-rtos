@@ -42,8 +42,8 @@ int sensor_bmp280_refresh(char *out, int max_chars)
 		INFO(", Humidity: %.2f\n", humidity);
 
 	if (bme280p)
-		snprintf(out, max_chars, "%.2f;%.2f;0;%.2f;0", temperature, humidity, pressure);
+		snprintf(out, max_chars, "%.2f;%.2f;0;%.2f;0", temperature, humidity, pressure / 100);
 	else
-		snprintf(out, max_chars, "%.2f;%.2f;0;%.2f;0", temperature, humidity, pressure);
+		snprintf(out, max_chars, "%.2f;%.2f;0;%.2f;0", temperature, humidity, pressure / 100);
 	return 0;
 }
