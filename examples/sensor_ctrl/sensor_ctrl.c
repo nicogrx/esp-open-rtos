@@ -26,6 +26,7 @@
 #include "utils.h"
 #include "json_parser.h"
 #include "sensor_bmp280.h"
+#include "sensor_voltage.h"
 #include "server.h"
 #include "ser2net.h"
 
@@ -77,6 +78,14 @@ static struct sensor sensors[] = {
 		.refresh = sensor_bmp280_refresh,
 		.destroy = NULL,
 		.private = (void *)&bmp280_i2c,
+	},
+	{
+		.idx = 379,
+		.period = 60,
+		.init = NULL,
+		.refresh = sensor_voltage_refresh,
+		.destroy = NULL,
+		.private = NULL,
 	},
 	{
 		.period = 0, /* dummy sensor marking end of list */
@@ -151,7 +160,8 @@ void sensors_init(struct sensor *sensors)
 	int ticks = xTaskGetTickCount();
 
 	while(s->period != 0) {
-		s->init(s->private);
+		if (s->init)
+			s->init(s->private);
 		sensor_reload(s, ticks);
 		s++;
 	}
