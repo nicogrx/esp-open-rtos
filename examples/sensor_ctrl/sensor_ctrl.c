@@ -185,22 +185,19 @@ void sensors_refresh(struct sensor *sensors)
 
 	while(s->period != 0) {
 		if (ticks >= s->timeout_ticks) {
-			if (sock == -1) {
-				sock = client_open(SERVER, PORT);
-				if (sock < 0) {
-					return;
-				}
+			sock = client_open(SERVER, PORT);
+			if (sock < 0) {
+				continue;
 			}
 			s->refresh(sensor_data, SENSOR_DATA_SIZE);
 			snprintf(json_req, JSON_REQ_SIZE, "%s%d&nvalue=0&svalue=%s", json_updt_dev_hdr,
 					s->idx, sensor_data);
 			client_http_get(sock, json_req, http_resp);
+			client_close(sock);
 			sensor_reload(s, ticks);
 		}
 		s++;
 	}
-	if (sock != - 1)
-		client_close(sock);
 }
 
 static void sensor_ctrl_main_task(void *pvParameters)
